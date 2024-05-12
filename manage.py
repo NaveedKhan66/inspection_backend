@@ -5,7 +5,7 @@ import sys
 
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'inspection_backend.settings')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "inspection_backend.settings")
     try:
         from django.core.management import execute_from_command_line
         from users import User
@@ -15,7 +15,7 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
-        
+
     execute_from_command_line(sys.argv)
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
@@ -23,5 +23,5 @@ def main():
         User.objects.create_superuser("admin", ADMIN_EMAIL, ADMIN_PASSWORD)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
