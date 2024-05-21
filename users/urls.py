@@ -17,8 +17,17 @@ urlpatterns = [
         name="admin-password-reset",
     ),
     path(
-        "users/first-login/",
+        "user/first-login/",
         views.UpdateFirstLoginView.as_view(),
         name="update-first-login",
+    ),
+    path(
+        "user/detail/", views.UpdateUserDetailView.as_view(), name="update-user-detail"
+    ),
+    path("user/", views.CreateUserView.as_view(), name="update-user-detail"),
+    path(
+        "auth/user/password/",
+        views.SetUserPasswordView.as_view(),
+        name="set-user-password",
     ),
 ]
