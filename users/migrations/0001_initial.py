@@ -5,8 +5,6 @@ import django.contrib.auth.validators
 import django.utils.timezone
 import uuid
 from django.db import migrations, models
-import os
-from inspection_backend.settings import logging
 
 
 class Migration(migrations.Migration):
@@ -16,17 +14,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ("auth", "0012_alter_user_first_name_max_length"),
     ]
-
-    def create_superuser(apps, schema_editor):
-        from users.models import User
-
-        email = os.getenv("ADMIN_EMAIL")
-        password = os.getenv("ADMIN_PASSWORD")
-
-        user = User.objects.create_superuser("admin", email, password)
-        user.user_type = User.USER_TYPES.admin
-        user.save()
-        logging.info("Superuser created")
 
     operations = [
         migrations.CreateModel(
@@ -145,5 +132,4 @@ class Migration(migrations.Migration):
                 ("objects", django.contrib.auth.models.UserManager()),
             ],
         ),
-        migrations.RunPython(create_superuser),
     ]
