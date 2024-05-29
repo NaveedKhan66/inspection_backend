@@ -32,7 +32,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        user_type = User.USER_TYPES.get_slug_by_value(self.user.user_type)
+        user_type = self.user.user_type
         # Add custom data
         data.update(
             {
