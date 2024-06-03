@@ -5,6 +5,9 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import AccessToken
 from inspection_backend.settings import EMAIL_HOST
 from inspection_backend.settings import RESET_PASSOWRD_LINK
+from users.models import Builder
+from users.models import Trade
+from users.models import Client
 
 User = get_user_model()
 
@@ -58,14 +61,47 @@ class UpdateFirstLoginSerializer(serializers.ModelSerializer):
         fields = ["first_login"]
 
 
-class UpdateUserDetailSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
-    profile_picture = serializers.CharField(required=False)
+class UpdateUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "profile_picture"]
+        fields = [
+            "id",
+            "email",
+            "user_type",
+            "first_name",
+            "last_name",
+            "address",
+            "website",
+            "province",
+            "city",
+            "postal_code",
+            "profile_picture",
+        ]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "email": {"read_only": True},
+            "user_type": {"read_only": True},
+        }
+
+
+class UpdateUserDetailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "user_type",
+            "first_name",
+            "last_name",
+            "profile_picture",
+        ]
+        extra_kwargs = {
+            "email": {"read_only": True},
+            "id": {"read_only": True},
+            "user_type": {"read_only": True},
+        }
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -75,7 +111,30 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["email", "user_type"]
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "user_type",
+            "address",
+            "website",
+            "province",
+            "city",
+            "postal_code",
+            "profile_picture",
+        ]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "first_name": {"required": False},
+            "last_name": {"required": False},
+            "address": {"required": False},
+            "website": {"required": False},
+            "province": {"required": False},
+            "city": {"required": False},
+            "postal_code": {"required": False},
+            "profile_picture": {"required": False},
+        }
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
@@ -99,10 +158,27 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user = User.objects.create(
             username=validated_data["email"],
             email=validated_data["email"],
-            user_type=validated_data["user_type"],
+            address=validated_data.get("address"),
+            website=validated_data.get("website"),
+            province=validated_data.get("province"),
+            city=validated_data.get("city"),
+            postal_code=validated_data.get("postal_code"),
+            profile_picture=validated_data.get("profile_picture"),
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
         )
         user.set_unusable_password()
         user.save()
+
+        user_type = validated_data.get("user_type")
+        request = self.context.get("request")
+
+        if user_type == "builder":
+            builder = Builder.objects.create(user=user)
+        elif user_type == "client":
+            client = Client.objects.create(user=user)
+        elif user_type == "trade":
+            trade = Trade.objects.create(user=user, builder=request.user.builder)
 
         # Create a JWT token
         token = AccessToken.for_user(user)

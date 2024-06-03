@@ -18,6 +18,11 @@ class User(AbstractUser):
     email = models.EmailField(_("email address"), unique=True)
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default="client")
     profile_picture = models.CharField(max_length=255, null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    website = models.CharField(max_length=610, null=True, blank=True)
+    province = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=255, null=True, blank=True)
+    postal_code = models.IntegerField(null=True, blank=True)
 
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
@@ -35,7 +40,7 @@ class Builder(models.Model):
         max_length=64, null=True, blank=True, help_text="Vendor builder number"
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="builder")
-    team = models.ManyToManyField("users.Builder")
+    team = models.ManyToManyField("users.Builder", blank=True)
 
     def __str__(self):
         return f"{self.user} {self.vbn}"

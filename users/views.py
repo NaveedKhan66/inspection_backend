@@ -4,6 +4,7 @@ from users.serializers import AdminPasswordResetSerializer
 from users.serializers import CustomTokenObtainPairSerializer
 from users.serializers import UpdateFirstLoginSerializer
 from users.serializers import UpdateUserDetailSerializer
+from users.serializers import UpdateUserSerializer
 from users.serializers import CreateUserSerializer
 from users.serializers import SetPasswordSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -45,6 +46,10 @@ class UpdateFirstLoginView(generics.UpdateAPIView):
 
 
 class UpdateUserDetailView(generics.UpdateAPIView):
+    """
+    This is used just to update first_name, last_name and profile_picture
+    of the user calling this API
+    """
 
     queryset = User.objects.all()
     serializer_class = UpdateUserDetailSerializer
@@ -58,6 +63,16 @@ class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = CreateUserSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class UpdateUserView(generics.UpdateAPIView):
+    """
+    This is used to update complete user details by the admin
+    """
+
+    queryset = User.objects.all()
+    serializer_class = UpdateUserSerializer
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
 
 class SetUserPasswordView(generics.GenericAPIView):

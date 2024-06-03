@@ -12,7 +12,7 @@ urlpatterns = [
     ),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path(
-        "auth/admin/password",
+        "auth/admin/password/",
         views.AdminPasswordResetView.as_view(),
         name="admin-password-reset",
     ),
@@ -24,7 +24,8 @@ urlpatterns = [
     path(
         "user/detail/", views.UpdateUserDetailView.as_view(), name="update-user-detail"
     ),
-    path("user/", views.CreateUserView.as_view(), name="update-user-detail"),
+    path("user/", views.CreateUserView.as_view(), name="create-user"),
+    path("user/<str:pk>/", views.UpdateUserView.as_view(), name="update-user"),
     path(
         "auth/user/password/",
         views.SetUserPasswordView.as_view(),
