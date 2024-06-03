@@ -27,7 +27,7 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("", include("users.urls")),
     path(
-        "api/schema/swagger-ui/",
+        "api/schema/swagger/",
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
     ),
