@@ -60,6 +60,12 @@ class UpdateUserDetailView(generics.UpdateAPIView):
 
 
 class CreateUserView(generics.CreateAPIView):
+    """
+    Following users can create other users
+    Admin: Builder, Client
+    Builder: Trade
+    """
+
     queryset = User.objects.all()
     serializer_class = CreateUserSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -76,6 +82,10 @@ class UpdateUserView(generics.UpdateAPIView):
 
 
 class SetUserPasswordView(generics.GenericAPIView):
+    """
+    Sets user password upon first_login
+    """
+
     serializer_class = SetPasswordSerializer
 
     def post(self, request, *args, **kwargs):
