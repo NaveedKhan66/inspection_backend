@@ -24,6 +24,7 @@ class User(AbstractUser):
     province = models.CharField(max_length=255, null=True, blank=True)
     city = models.CharField(max_length=255, null=True, blank=True)
     postal_code = models.IntegerField(null=True, blank=True)
+    phone_no = models.IntegerField(null=True, blank=True)
 
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"

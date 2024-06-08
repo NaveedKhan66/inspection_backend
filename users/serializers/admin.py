@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from users.models import BuilderEmployee
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
@@ -46,6 +47,7 @@ class AdminBuilderSerializer(serializers.ModelSerializer):
             "first_login",
             "no_of_projects",
             "team",
+            "phone_no",
         ]
         extra_kwargs = {
             "id": {"read_only": True},
@@ -59,3 +61,22 @@ class AdminBuilderSerializer(serializers.ModelSerializer):
 
     def get_team(self, obj):
         return obj.builder.employees.count()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "first_name", "last_name", "email", "phone_no"]
+
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "email": {"read_only": True},
+        }
+
+
+class AdminBuilderEmployeeSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = BuilderEmployee
+        fields = ["user", "role"]

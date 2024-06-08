@@ -82,6 +82,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             "user_type",
             "address",
             "website",
+            "phone_no",
             "province",
             "city",
             "postal_code",
@@ -144,6 +145,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             profile_picture=validated_data.get("profile_picture"),
             first_name=validated_data.get("first_name", ""),
             last_name=validated_data.get("last_name", ""),
+            phone_no=validated_data.get("phone_no"),
         )
         user.set_unusable_password()
         user.save()

@@ -39,4 +39,14 @@ urlpatterns = [
         generic.SetUserPasswordView.as_view(),
         name="set-user-password",
     ),
+    path(
+        "user/admin/builder/<id>/employees/",
+        admin.AdminBuilderEmployeeListView.as_view(),
+        name="builder-employees-list",
+    ),
+    path(
+        "user/admin/employee/<user__id>",
+        admin.AdminBuilderEmployeeRetrieveUpdateDeleteView.as_view(),
+        name="builder-employees",
+    ),
 ]
