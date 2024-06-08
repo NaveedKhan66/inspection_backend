@@ -10,6 +10,7 @@ class User(AbstractUser):
         ("builder", "Builder"),
         ("trade", "Trade"),
         ("client", "Client"),
+        ("employee", "Employee"),
     )
     id = models.UUIDField(
         default=uuid.uuid4, primary_key=True, db_index=True, editable=False
@@ -36,14 +37,26 @@ class Builder(models.Model):
     id = models.UUIDField(
         default=uuid.uuid4, primary_key=True, db_index=True, editable=False
     )
-    vbn = models.CharField(
-        max_length=64, null=True, blank=True, help_text="Vendor builder number"
-    )
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="builder")
-    team = models.ManyToManyField("users.Builder", blank=True)
 
     def __str__(self):
-        return f"{self.user} {self.vbn}"
+        return f"{self.user}"
+
+
+class BuilderEmployee(models.Model):
+    """Model class for employees of the builder"""
+
+    id = models.UUIDField(
+        default=uuid.uuid4, primary_key=True, db_index=True, editable=False
+    )
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="employee")
+    builder = models.ForeignKey(
+        Builder, on_delete=models.CASCADE, related_name="employees"
+    )
+    role = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user} {self.builder}"
 
 
 class Trade(models.Model):
