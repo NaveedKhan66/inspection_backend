@@ -26,6 +26,9 @@ class AdminPasswordResetSerializer(serializers.ModelSerializer):
 
 class AdminBuilderSerializer(serializers.ModelSerializer):
 
+    no_of_projects = serializers.SerializerMethodField(read_only=True)
+    team = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = User
         fields = [
@@ -41,6 +44,8 @@ class AdminBuilderSerializer(serializers.ModelSerializer):
             "postal_code",
             "profile_picture",
             "first_login",
+            "no_of_projects",
+            "team",
         ]
         extra_kwargs = {
             "id": {"read_only": True},
@@ -48,3 +53,9 @@ class AdminBuilderSerializer(serializers.ModelSerializer):
             "user_type": {"read_only": True},
             "first_login": {"read_only": True},
         }
+
+    def get_no_of_projects(self, obj):
+        return obj.builder.projects.count()
+
+    def get_team(self, obj):
+        return obj.builder.employees.count()
