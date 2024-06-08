@@ -12,25 +12,6 @@ from users.models import Client
 User = get_user_model()
 
 
-class AdminPasswordResetSerializer(serializers.ModelSerializer):
-    new_password = serializers.CharField(write_only=True, min_length=8)
-    confirm_password = serializers.CharField(write_only=True, min_length=8)
-
-    class Meta:
-        model = User
-        fields = ["new_password", "confirm_password"]
-
-    def validate(self, data):
-        if data["new_password"] != data["confirm_password"]:
-            raise serializers.ValidationError("Passwords do not match")
-        return data
-
-    def update(self, instance, validated_data):
-        instance.set_password(validated_data["new_password"])
-        instance.save()
-        return instance
-
-
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
@@ -45,6 +26,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 "last_name": self.user.last_name,
                 "first_login": self.user.first_login,
                 "user_type": user_type,
+                "profile_picture": self.user.profile_picture,
             }
         )
 
@@ -59,30 +41,6 @@ class UpdateFirstLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["first_login"]
-
-
-class UpdateUserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "email",
-            "user_type",
-            "first_name",
-            "last_name",
-            "address",
-            "website",
-            "province",
-            "city",
-            "postal_code",
-            "profile_picture",
-        ]
-        extra_kwargs = {
-            "id": {"read_only": True},
-            "email": {"read_only": True},
-            "user_type": {"read_only": True},
-        }
 
 
 class UpdateUserDetailSerializer(serializers.ModelSerializer):
