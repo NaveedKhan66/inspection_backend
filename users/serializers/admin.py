@@ -57,7 +57,7 @@ class AdminBuilderSerializer(serializers.ModelSerializer):
         }
 
     def get_no_of_projects(self, obj):
-        return obj.builder.projects.count()
+        return obj.projects.count()
 
     def get_team(self, obj):
         return obj.builder.employees.count()
@@ -66,7 +66,14 @@ class AdminBuilderSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "first_name", "last_name", "email", "phone_no"]
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "phone_no",
+            "profile_picture",
+        ]
 
         extra_kwargs = {
             "id": {"read_only": True},
