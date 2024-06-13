@@ -8,6 +8,9 @@ from projects.models import Home
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from django.db.models import Count, Prefetch
+from users.models import BuilderEmployee, Builder
 
 # TODO: Use a different serializer for listing
 
@@ -120,3 +123,65 @@ class BluePrintImageDelete(generics.DestroyAPIView):
     queryset = BluePrintImage.objects.all()
     serializer_class = BluePrintImageSerializer
     permission_class = (permissions.IsAuthenticated, permissions.IsAdminUser)
+
+
+class DashboardAPIView(APIView):
+    """
+    API to provide dashboard statistics for projects.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        # Query for active, inactive, and hold projects
+        active_projects = Project.objects.filter(status="active").count()
+        inactive_projects = Project.objects.filter(status="inactive").count()
+        hold_projects = Project.objects.filter(status="hold").count()
+
+        # Query for users who are builders with their total projects and employees
+        builders_with_projects = (
+            User.objects.filter(user_type="builder")
+            .annotate(total_projects=Count("projects"))
+            .prefetch_related(
+                Prefetch(
+                    "projects", queryset=Project.objects.only("id", "name", "status")
+                ),
+                Prefetch(
+                    "builder__employees",
+                    queryset=BuilderEmployee.objects.select_related("user").only(
+                        "user__id", "user__profile_picture"
+                    ),
+                ),
+            )
+            .order_by("-total_projects")
+        )
+
+        builders_summary = []
+        for user in builders_with_projects:
+            employees_summary = [
+                {
+                    "id": employee.user.id,
+                    "profile_picture": employee.user.profile_picture,
+                }
+                for employee in user.builder.employees.all()
+            ]
+            builder_data = {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "profile_picture": user.profile_picture,
+                "total_projects": user.total_projects,
+                "employees": employees_summary,
+            }
+            builders_summary.append(builder_data)
+
+        response_data = {
+            "projects_summary": {
+                "active": active_projects,
+                "inactive": inactive_projects,
+                "hold": hold_projects,
+            },
+            "builders_summary": builders_summary,
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)

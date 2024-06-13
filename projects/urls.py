@@ -46,4 +46,5 @@ urlpatterns = [
         views.BuilderProjectListView.as_view(),
         name="builder-project-list",
     ),
+    path("dashboard/", views.DashboardAPIView.as_view(), name="dashboard-api"),
 ]
