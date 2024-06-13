@@ -19,15 +19,31 @@ from projects import views
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-
 router.register(r"project", views.ProjectViewset, basename="project")
 
+home_router = DefaultRouter()
+home_router.register(r"home", views.HomeViewSet, basename="home")
+
+blue_print_router = DefaultRouter()
+blue_print_router.register(r"blueprint", views.BluePrintViewSet, basename="blueprint")
 
 urlpatterns = [
     path(r"", include(router.urls)),
+    path(r"project/<uuid:project_id>/", include(home_router.urls)),
+    path(r"home/<uuid:home_id>/", include(blue_print_router.urls)),
     path(
         "project/<pk>/assignee/",
         views.ProjectAsigneeUpdateView.as_view(),
         name="project-assignee",
+    ),
+    path(
+        "home/blueprint/image/<int:pk>",
+        views.BluePrintImageDelete.as_view(),
+        name="blueprint-image-delete",
+    ),
+    path(
+        "builder/<uuid:builder_id>/projects/",
+        views.BuilderProjectListView.as_view(),
+        name="builder-project-list",
     ),
 ]

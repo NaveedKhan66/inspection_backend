@@ -28,3 +28,54 @@ class Project(models.Model):
 
     def __str__(self):
         return f"{self.id} {self.name} {self.builder}"
+
+
+class Home(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    lot_no = models.CharField(max_length=64, null=True, blank=True)
+    street_no = models.CharField(max_length=64, null=True, blank=True)
+    address = models.CharField(max_length=256, null=True, blank=True)
+    city = models.CharField(max_length=64, null=True, blank=True)
+    province = models.CharField(max_length=64, null=True, blank=True)
+    postal_code = models.CharField(max_length=32, null=True, blank=True)
+    enrollment_no = models.IntegerField(null=True, blank=True)
+    warranty_start_date = models.DateField()
+    home_type = models.CharField(max_length=64, null=True, blank=True)
+    client = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        related_name="homes",
+        null=True,
+        blank=True,
+    )
+    project = models.ForeignKey(
+        "projects.Project", on_delete=models.CASCADE, related_name="homes"
+    )
+
+    def __str__(self):
+        return f"{self.id} {self.enrollment_no}"
+
+
+class BluePrint(models.Model):
+    label = models.CharField(max_length=64, null=True, blank=True)
+    category = models.CharField(max_length=64, null=True, blank=True)
+    home = models.ForeignKey(
+        "projects.Home", on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    def __str__(self):
+        return f"{self.label} {self.category}"
+
+
+class BluePrintImage(models.Model):
+    """
+    Model to store blue print images because a blueprint can have multiple images
+    """
+
+    blue_print = models.ForeignKey(
+        "projects.BluePrint", related_name="images", on_delete=models.CASCADE
+    )
+    image = models.CharField(max_length=256, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.id} {self.blue_print, self.image}"

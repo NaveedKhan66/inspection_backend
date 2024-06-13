@@ -83,3 +83,6 @@ class Client(models.Model):
 
     def __str__(self):
         return f"{self.user}"
+
+
+# TODO: remove profile uuids from the models. There should only be user uuid
