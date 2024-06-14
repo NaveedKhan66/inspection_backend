@@ -40,12 +40,20 @@ class ProjectAssigneeSerializer(serializers.ModelSerializer):
         fields = ["id", "profile_picture"]
 
 
+class ProjectBuilderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "first_name", "last_name"]
+
+
 class ProjectListSerializer(serializers.ModelSerializer):
     assignees = ProjectAssigneeSerializer(many=True)
+    builder = ProjectBuilderSerializer()
 
     class Meta:
         model = Project
         fields = [
+            "id",
             "name",
             "no_of_homes",
             "assignees",

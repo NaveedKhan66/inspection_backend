@@ -76,18 +76,16 @@ class HomeViewSet(viewsets.ModelViewSet):
 
         return HomeSerializer
 
+    def perform_create(self, serializer):
+        project_id = self.kwargs.get("project_id")
+        project = get_object_or_404(Project, id=project_id)
+        serializer.save(project=project)
+
     def create(self, request, *args, **kwargs):
         is_many = isinstance(request.data, list)
-        project_id = kwargs.get("project_id")
-
-        # Fetch the project instance
-        project = get_object_or_404(Project, id=project_id)
 
         if is_many:
             # For bulk creation
-            for item in request.data:
-                item["project"] = project_id
-
             serializer = self.get_serializer(data=request.data, many=True)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
@@ -98,7 +96,6 @@ class HomeViewSet(viewsets.ModelViewSet):
 
         else:
             # For single creation
-            request.data["project"] = project_id
             return super().create(request, *args, **kwargs)
 
 
