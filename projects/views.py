@@ -105,9 +105,9 @@ class BluePrintViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        home_id = self.request.query_params.get("home_id")
+        home_id = self.kwargs.get("home_id")
         if home_id:
-            queryset = queryset.filter(home_id=home_id)
+            queryset = queryset.filter(home__id=home_id)
         return queryset
 
     def retrieve(self, request, *args, **kwargs):
