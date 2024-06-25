@@ -60,6 +60,11 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "status",
             "builder",
             "developer_name",
+            "vbn",
+            "city",
+            "province",
+            "postal_code",
+            "address",
         ]
 
 
