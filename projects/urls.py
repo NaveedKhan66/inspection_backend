@@ -15,17 +15,17 @@ Including another URLconf
 """
 
 from django.urls import path, include
-from projects import views
+from projects.views import admin
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r"project", views.ProjectViewset, basename="project")
+router.register(r"project", admin.ProjectViewset, basename="project")
 
 home_router = DefaultRouter()
-home_router.register(r"home", views.HomeViewSet, basename="home")
+home_router.register(r"home", admin.HomeViewSet, basename="home")
 
 blue_print_router = DefaultRouter()
-blue_print_router.register(r"blueprint", views.BluePrintViewSet, basename="blueprint")
+blue_print_router.register(r"blueprint", admin.BluePrintViewSet, basename="blueprint")
 
 urlpatterns = [
     path(r"", include(router.urls)),
@@ -33,18 +33,18 @@ urlpatterns = [
     path(r"home/<uuid:home_id>/", include(blue_print_router.urls)),
     path(
         "project/<pk>/assignee/",
-        views.ProjectAsigneeUpdateView.as_view(),
+        admin.ProjectAsigneeUpdateView.as_view(),
         name="project-assignee",
     ),
     path(
         "home/blueprint/image/<int:pk>",
-        views.BluePrintImageDelete.as_view(),
+        admin.BluePrintImageDelete.as_view(),
         name="blueprint-image-delete",
     ),
     path(
         "builder/<uuid:builder_id>/projects/",
-        views.BuilderProjectListView.as_view(),
+        admin.BuilderProjectListView.as_view(),
         name="builder-project-list",
     ),
-    path("dashboard/", views.DashboardAPIView.as_view(), name="dashboard-api"),
+    path("dashboard/", admin.DashboardAPIView.as_view(), name="dashboard-api"),
 ]

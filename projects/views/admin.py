@@ -1,5 +1,5 @@
 from rest_framework import generics
-from projects.serializers import *
+from projects.serializers.admin import *
 from rest_framework import permissions
 from projects.models import Project
 from rest_framework import mixins
@@ -11,8 +11,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from django.db.models import Count, Prefetch
 from users.models import BuilderEmployee, Builder
-
-# TODO: Use a different serializer for listing
 
 
 class ProjectViewset(viewsets.ModelViewSet):
