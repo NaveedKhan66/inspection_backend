@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from django.db.models import Count, Prefetch
 from users.models import BuilderEmployee, Builder
+from users.permissions import IsAdminOrReadOnlyForBuilder
 
 
 class ProjectViewset(viewsets.ModelViewSet):
@@ -59,11 +60,20 @@ class HomeViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = HomeSerializer
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnlyForBuilder]
 
     def get_queryset(self):
+        user = self.request.user
+        project = None
         project_id = self.kwargs.get("project_id")
-        project = get_object_or_404(Project, id=project_id)
+
+        if user.user_type == "admin":
+            project = get_object_or_404(Project, id=project_id)
+
+        elif user.user_type == "builder":
+            """allow builders to get homes for their own projects"""
+            project = get_object_or_404(Project, id=project_id, builder=user)
+
         queryset = Home.objects.filter(project=project)
         return queryset
 

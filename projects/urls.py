@@ -15,7 +15,7 @@ Including another URLconf
 """
 
 from django.urls import path, include
-from projects.views import admin
+from projects.views import admin, builder
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -26,6 +26,14 @@ home_router.register(r"home", admin.HomeViewSet, basename="home")
 
 blue_print_router = DefaultRouter()
 blue_print_router.register(r"blueprint", admin.BluePrintViewSet, basename="blueprint")
+
+builder_project_router = DefaultRouter()
+builder_project_router.register(
+    r"builder/project",
+    builder.BuilderProjectListRetrieveView,
+    basename="builder-project",
+)
+
 
 urlpatterns = [
     path(r"", include(router.urls)),
@@ -47,4 +55,5 @@ urlpatterns = [
         name="builder-project-list",
     ),
     path("dashboard/", admin.DashboardAPIView.as_view(), name="dashboard-api"),
+    path(r"", include(builder_project_router.urls)),
 ]
