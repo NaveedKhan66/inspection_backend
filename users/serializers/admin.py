@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from users.models import BuilderEmployee
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
@@ -26,6 +27,9 @@ class AdminPasswordResetSerializer(serializers.ModelSerializer):
 
 class AdminBuilderSerializer(serializers.ModelSerializer):
 
+    no_of_projects = serializers.SerializerMethodField(read_only=True)
+    team = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = User
         fields = [
@@ -41,6 +45,9 @@ class AdminBuilderSerializer(serializers.ModelSerializer):
             "postal_code",
             "profile_picture",
             "first_login",
+            "no_of_projects",
+            "team",
+            "phone_no",
         ]
         extra_kwargs = {
             "id": {"read_only": True},
@@ -48,3 +55,35 @@ class AdminBuilderSerializer(serializers.ModelSerializer):
             "user_type": {"read_only": True},
             "first_login": {"read_only": True},
         }
+
+    def get_no_of_projects(self, obj):
+        return obj.projects.count()
+
+    def get_team(self, obj):
+        return obj.builder.employees.count()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "phone_no",
+            "profile_picture",
+        ]
+
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "email": {"read_only": True},
+        }
+
+
+class AdminBuilderEmployeeSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = BuilderEmployee
+        fields = ["user", "role"]

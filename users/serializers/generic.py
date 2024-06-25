@@ -8,6 +8,7 @@ from inspection_backend.settings import RESET_PASSOWRD_LINK
 from users.models import Builder
 from users.models import Trade
 from users.models import Client
+from users.models import BuilderEmployee
 
 User = get_user_model()
 
@@ -66,6 +67,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
     """Serializer to create multiple builders clients and trades"""
 
     user_type = serializers.ChoiceField(choices=User.USER_TYPES)
+    builder = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(user_type="builder"), required=False
+    )
+    role = serializers.CharField(max_length=255, required=False)
 
     class Meta:
         model = User
@@ -77,10 +82,13 @@ class CreateUserSerializer(serializers.ModelSerializer):
             "user_type",
             "address",
             "website",
+            "phone_no",
             "province",
             "city",
             "postal_code",
             "profile_picture",
+            "builder",
+            "role",
         ]
         extra_kwargs = {
             "id": {"read_only": True},
@@ -103,12 +111,24 @@ class CreateUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"detail": "Clients cannot create another user"}
             )
+        elif user.user_type == "employee":
+            raise serializers.ValidationError(
+                {"detail": "Builder employees cannot create another user"}
+            )
         elif (
             user.user_type == "builder"
             and not validated_data.get("user_type") == "trade"
         ):
             raise serializers.ValidationError(
                 {"detail": "Builders can only create Trades"}
+            )
+
+        # Builder id is required to create an employee
+        if validated_data.get("user_type") == "employee" and not validated_data.get(
+            "builder"
+        ):
+            raise serializers.ValidationError(
+                {"detail": "Builder is required when creating an employee"}
             )
         return validated_data
 
@@ -120,10 +140,12 @@ class CreateUserSerializer(serializers.ModelSerializer):
             website=validated_data.get("website"),
             province=validated_data.get("province"),
             city=validated_data.get("city"),
+            user_type=validated_data.get("user_type"),
             postal_code=validated_data.get("postal_code"),
             profile_picture=validated_data.get("profile_picture"),
             first_name=validated_data.get("first_name", ""),
             last_name=validated_data.get("last_name", ""),
+            phone_no=validated_data.get("phone_no"),
         )
         user.set_unusable_password()
         user.save()
@@ -133,10 +155,19 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
         if user_type == "builder":
             builder = Builder.objects.create(user=user)
+
         elif user_type == "client":
             client = Client.objects.create(user=user)
+
         elif user_type == "trade":
             trade = Trade.objects.create(user=user, builder=request.user.builder)
+
+        elif user_type == "employee":
+            builder_user = validated_data.get("builder")
+            role = validated_data.get("role")
+            employee = BuilderEmployee.objects.create(
+                user=user, builder=builder_user.builder, role=role
+            )
 
         # Create a JWT token
         token = AccessToken.for_user(user)

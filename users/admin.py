@@ -3,6 +3,8 @@ from users.models import User
 from users.models import Builder
 from users.models import Trade
 from users.models import Client
+from users.models import BuilderEmployee
+
 
 # Register your models here.
 
@@ -15,10 +17,17 @@ admin.site.register(User, UserAdmin)
 
 
 class BuilderAdmin(admin.ModelAdmin):
-    list_display = ["id", "user", "vbn"]
+    list_display = ["id", "user"]
 
 
 admin.site.register(Builder, BuilderAdmin)
+
+
+class BuilderEmployeeAdmin(admin.ModelAdmin):
+    list_display = ["id", "user", "builder", "role"]
+
+
+admin.site.register(BuilderEmployee, BuilderEmployeeAdmin)
 
 
 class TradeAdmin(admin.ModelAdmin):
