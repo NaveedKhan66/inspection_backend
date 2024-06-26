@@ -11,7 +11,7 @@ class Project(models.Model):
     vbn = models.CharField(max_length=64, null=True, blank=True)
     province = models.CharField(max_length=128, null=True, blank=True)
     city = models.CharField(max_length=128, null=True, blank=True)
-    postal_code = models.IntegerField(null=True, blank=True)
+    postal_code = models.CharField(max_length=32, null=True, blank=True)
     address = models.CharField(max_length=610, null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS_TYPES, default="active")
     created_at = models.DateTimeField(auto_now_add=True)
