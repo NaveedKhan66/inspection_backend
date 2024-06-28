@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "drf_spectacular_sidecar",
     "corsheaders",
     "projects",
+    "inspections",
 ]
 
 MIDDLEWARE = [

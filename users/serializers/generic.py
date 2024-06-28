@@ -122,6 +122,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"detail": "Builders can only create Trades"}
             )
+        elif user.user_type == "admin" and validated_data.get("user_type") == "trade":
+            raise serializers.ValidationError({"detail": "Admin cannot create Trades"})
 
         # Builder id is required to create an employee
         if validated_data.get("user_type") == "employee" and not validated_data.get(
