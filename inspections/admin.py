@@ -1,5 +1,5 @@
 from django.contrib import admin
-from inspections.models import Inspection, Deficiency, DefImage
+from inspections.models import Inspection, Deficiency, DefImage, HomeInspection
 
 # Register your models here.
 
@@ -24,3 +24,10 @@ class DefImageAdmin(admin.ModelAdmin):
 
 
 admin.site.register(DefImage, DefImageAdmin)
+
+
+class HomeInspectionAdmin(admin.ModelAdmin):
+    list_display = ("id", "home", "created_at")
+
+
+admin.site.register(HomeInspection, HomeInspectionAdmin)

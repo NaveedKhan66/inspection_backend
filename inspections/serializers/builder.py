@@ -1,7 +1,14 @@
-from inspections.models import Inspection, Deficiency, DefImage, DeficiencyReview
+from inspections.models import (
+    Inspection,
+    Deficiency,
+    DefImage,
+    HomeInspectionReview,
+    HomeInspection,
+)
 from rest_framework import serializers
 from datetime import date
 from django.contrib.auth import get_user_model
+from projects.models import Home
 
 User = get_user_model()
 
@@ -11,7 +18,7 @@ class InspectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Inspection
         fields = "__all__"
-        read_only_fields = ["builder"]
+        read_only_fields = ["builder", "no_of_def"]
 
 
 class DefImageSerializer(serializers.ModelSerializer):
@@ -23,23 +30,31 @@ class DefImageSerializer(serializers.ModelSerializer):
 
 class DeficiencySerializer(serializers.ModelSerializer):
     images = DefImageSerializer(many=True, required=False)
+    home = serializers.PrimaryKeyRelatedField(
+        queryset=Home.objects.all(), write_only=True
+    )
+    inspection = serializers.PrimaryKeyRelatedField(
+        queryset=Inspection.objects.all(), write_only=True
+    )
+    inspector_name = serializers.CharField(max_length=128, write_only=True)
 
     class Meta:
         model = Deficiency
         fields = [
             "id",
-            "inspection",
             "location",
             "trade",
-            "project",
-            "home",
             "description",
             "images",
             "created_at",
             "status",
             "is_reviewed",
+            "home",
+            "inspection",
+            "inspector_name",
+            "home_inspection",
         ]
-        read_only_fields = ["inspection", "created_at", "is_reviewed"]
+        read_only_fields = ["home_inspection", "created_at", "is_reviewed"]
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
@@ -56,18 +71,26 @@ class DeficiencySerializer(serializers.ModelSerializer):
                     {"detail": "Trade belongs to another builder."}
                 )
 
-        home = validated_data.get("home")
-        project = validated_data.get("project")
-
-        if home.project != project:
-            raise serializers.ValidationError(
-                {"detail": "Deficiency and home must belong to the same project."}
-            )
-
         return validated_data
 
     def create(self, validated_data):
         images_data = validated_data.pop("images", [])
+        inspection = validated_data.pop("inspection")
+        home = validated_data.pop("home")
+        inspector_name = validated_data.pop("inspector_name")
+        home_inspection = None
+
+        if HomeInspection.objects.filter(home=home, inspection=inspection).exists():
+            home_inspection = HomeInspection.objects.filter(
+                home=home, inspection=inspection
+            ).first()
+        else:
+            home_inspection = HomeInspection.objects.create(
+                home=home, inspection=inspection, inspector_name=inspector_name
+            )
+
+        validated_data["home_inspection"] = home_inspection
+
         deficiency = Deficiency.objects.create(**validated_data)
         for image_data in images_data:
             DefImage.objects.create(deficiency=deficiency, **image_data)
@@ -83,13 +106,21 @@ class DeficiencySerializer(serializers.ModelSerializer):
 
         return instance
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["trade"] = {
+            "id": instance.trade.id,
+            "name": instance.trade.get_full_name(),
+        }
+        return representation
+
 
 class DeficiencyListSerializer(serializers.ModelSerializer):
     outstanding_days = serializers.SerializerMethodField()
 
     class Meta:
         model = Deficiency
-        exclude = ["project", "home"]
+        exclude = ["home_inspection"]
 
     def get_outstanding_days(self, obj):
         if obj.status == "complete":
@@ -98,26 +129,43 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
             delta = date.today() - obj.created_at
             return delta.days
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["trade"] = {
+            "id": instance.trade.id,
+            "name": instance.trade.get_full_name(),
+        }
+        return representation
 
-class DefReviewSerializer(serializers.ModelSerializer):
+
+class InspectionReviewSerializer(serializers.ModelSerializer):
+    inspection = serializers.PrimaryKeyRelatedField(
+        queryset=Inspection.objects.all(), write_only=True
+    )
+    home = serializers.PrimaryKeyRelatedField(
+        queryset=Home.objects.all(), write_only=True
+    )
 
     class Meta:
-        model = DeficiencyReview
+        model = HomeInspectionReview
         fields = "__all__"
+        read_only_fields = ["home_inspection"]
 
-    def validate(self, attrs):
-        validated_data = super().validate(attrs)
-        request = self.context.get("request")
-        builder = request.user
-
-        deficiency = validated_data.get("deficiency")
-
-        if deficiency.home.project.builder != builder:
+    def create(self, validated_data):
+        inspection = validated_data.pop("inspection")
+        home = validated_data.pop("home")
+        home_inspection = HomeInspection.objects.filter(
+            inspection=inspection, home=home
+        ).first()
+        if not home_inspection:
             raise serializers.ValidationError(
-                {"detail": "Deficiency belongs to another builder."}
+                {"detail": "This Home inspection doesn't exist"}
             )
-
-        return validated_data
+        validated_data["home_inspection"] = home_inspection
+        try:
+            return HomeInspectionReview.objects.get(home_inspection=home_inspection)
+        except HomeInspectionReview.DoesNotExist:
+            return HomeInspectionReview.objects.create(**validated_data)
 
 
 class DeficiencyEmailSerializer(serializers.Serializer):

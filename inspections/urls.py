@@ -14,7 +14,7 @@ deficiency_router.register(
 urlpatterns = [
     path(r"", include(router.urls)),
     path(
-        "inspection/<uuid:inspection_id>/",
+        "inspection/",
         include(deficiency_router.urls),
         name="inspection-deficiency",
     ),
@@ -29,8 +29,8 @@ urlpatterns = [
         name="builder-trade-deficiency-list",
     ),
     path(
-        "deficiency/review/",
-        builder.DefReviewCreateView.as_view(),
+        "inspection/review/",
+        builder.InspectionReviewCreateView.as_view(),
         name="deficiency-review",
     ),
     path(

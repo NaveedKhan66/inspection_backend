@@ -1,4 +1,4 @@
-from inspections.models import Inspection, Deficiency, DefImage, DeficiencyReview
+from inspections.models import Inspection, Deficiency, DefImage, HomeInspectionReview
 from rest_framework import viewsets, generics
 from users.permissions import IsBuilder
 from users.models import User
@@ -12,6 +12,8 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from inspection_backend.settings import EMAIL_HOST
 from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
+from inspections.filters import DeficiencyFilter
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -29,13 +31,12 @@ class InspectionViewSet(viewsets.ModelViewSet):
 class DeficiencyViewSet(viewsets.ModelViewSet):
     serializer_class = builder.DeficiencySerializer
     permission_classes = [IsAuthenticated, IsBuilder]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = DeficiencyFilter
 
     def get_queryset(self):
-        inspection_id = self.kwargs.get("inspection_id")
         builder = self.request.user
-        return Deficiency.objects.filter(
-            inspection_id=inspection_id, inspection__builder=builder
-        )
+        return Deficiency.objects.filter(home_inspection__inspection__builder=builder)
 
     def get_serializer_class(self):
         serializer_class = super().get_serializer_class()
@@ -45,11 +46,6 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
                 serializer_class = builder.DeficiencyListSerializer
 
         return serializer_class
-
-    def perform_create(self, serializer):
-        inspection_id = self.kwargs.get("inspection_id")
-        inspection = get_object_or_404(Inspection, id=inspection_id)
-        serializer.save(inspection=inspection)
 
 
 class DefImageDeleteView(generics.DestroyAPIView):
@@ -83,10 +79,10 @@ class BuilderTradeDeficiencyListView(generics.ListAPIView):
         return Deficiency.objects.none()
 
 
-class DefReviewCreateView(generics.CreateAPIView):
-    serializer_class = builder.DefReviewSerializer
+class InspectionReviewCreateView(generics.CreateAPIView):
+    serializer_class = builder.InspectionReviewSerializer
     permission_class = (IsAuthenticated, IsBuilder)
-    queryset = DeficiencyReview.objects.all()
+    queryset = HomeInspectionReview.objects.all()
 
 
 class SendDeficiencyEmailView(APIView):

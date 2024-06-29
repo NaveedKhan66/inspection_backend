@@ -16,14 +16,27 @@ class Inspection(models.Model):
         return f"{self.id} {self.name}"
 
 
+class HomeInspection(models.Model):
+    inspection = models.ForeignKey("inspections.Inspection", on_delete=models.CASCADE)
+    home = models.ForeignKey("projects.Home", on_delete=models.CASCADE)
+    inspector_name = models.CharField(max_length=128)
+    created_at = models.DateField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return f"{self.id} {self.inspection.name}"
+
+
 class Deficiency(models.Model):
     STATUS_TYPES = (
         ("complete", "Complete"),
         ("incomplete", "Incomplete"),
         ("pending_approval", "Pending Approval"),
     )
-    inspection = models.ForeignKey(
-        "inspections.Inspection", on_delete=models.CASCADE, related_name="deficiencies"
+    home_inspection = models.ForeignKey(
+        "inspections.HomeInspection",
+        on_delete=models.CASCADE,
+        related_name="deficiencies",
     )
     location = models.CharField(max_length=128, null=True, blank=True)
     trade = models.ForeignKey(
@@ -33,26 +46,20 @@ class Deficiency(models.Model):
         blank=True,
         related_name="deficiencies",
     )
-    project = models.ForeignKey(
-        "projects.Project", on_delete=models.CASCADE, related_name="deficiencies"
-    )
-    home = models.ForeignKey(
-        "projects.Home", on_delete=models.CASCADE, related_name="deficiencies"
-    )
     description = models.TextField()
     created_at = models.DateField(auto_now_add=True, null=True, blank=True)
     status = models.CharField(max_length=64, choices=STATUS_TYPES, default="incomplete")
     is_reviewed = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        return f"{self.id} {self.inspection}"
+        return f"{self.id} {self.home_inspection}"
 
     def save(self, *args, **kwargs):
         """Maintain no_of_def in Inspection model"""
 
-        self.inspection.no_of_def += 1
-        self.inspection.save()
         super().save(*args, **kwargs)
+        self.home_inspection.inspection.no_of_def += 1
+        self.home_inspection.inspection.save()
 
 
 class DefImage(models.Model):
@@ -62,16 +69,16 @@ class DefImage(models.Model):
     image = models.CharField(max_length=256)
 
 
-class DeficiencyReview(models.Model):
-    deficiency = models.OneToOneField(
-        "inspections.Deficiency", on_delete=models.CASCADE, related_name="reviews"
+class HomeInspectionReview(models.Model):
+    home_inspection = models.OneToOneField(
+        "inspections.HomeInspection", on_delete=models.CASCADE, related_name="review"
     )
     created_at = models.DateField(auto_now_add=True)
     inspector_name = models.CharField(max_length=128, null=True, blank=True)
-    home_owner = models.CharField(max_length=128, null=True, blank=True)
     designate = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        """Sets the is_reviewed field of deficiency to True when review is done"""
-        self.deficiency.is_reviewed = True
-        return super().save(*args, **kwargs)
+        """Sets the is_reviewed field of home inspection to True when review is done"""
+        super().save(*args, **kwargs)
+        self.home_inspection.is_reviewed = True
+        self.home_inspection.save()
