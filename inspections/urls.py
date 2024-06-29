@@ -3,9 +3,24 @@ from inspections.views import builder
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r"inspection", builder.InspectionViewSet, basename="inspection")
+router.register(r"inspections", builder.InspectionViewSet, basename="inspection")
+
+deficiency_router = DefaultRouter()
+deficiency_router.register(
+    r"deficiencies", builder.DeficiencyViewSet, basename="deficiency"
+)
 
 
 urlpatterns = [
-    path(r"builder/", include(router.urls)),
+    path(r"", include(router.urls)),
+    path(
+        "inspection/<uuid:inspection_id>/",
+        include(deficiency_router.urls),
+        name="inspection-deficiency",
+    ),
+    path(
+        "deficiency/image/<int:pk>",
+        builder.DefImageDeleteView.as_view(),
+        name="deficiency-image-delete",
+    ),
 ]

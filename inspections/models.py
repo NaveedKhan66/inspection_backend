@@ -12,8 +12,16 @@ class Inspection(models.Model):
         "users.User", on_delete=models.CASCADE, related_name="inspections"
     )
 
+    def __str__(self) -> str:
+        return f"{self.id} {self.name}"
+
 
 class Deficiency(models.Model):
+    STATUS_TYPES = (
+        ("complete", "Complete"),
+        ("incomplete", "Incomplete"),
+        ("pending_approval", "Pending Approval"),
+    )
     inspection = models.ForeignKey(
         "inspections.Inspection", on_delete=models.CASCADE, related_name="deficiencies"
     )
@@ -32,6 +40,11 @@ class Deficiency(models.Model):
         "projects.Home", on_delete=models.CASCADE, related_name="deficiencies"
     )
     description = models.TextField()
+    created_at = models.DateField(auto_now_add=True, null=True, blank=True)
+    status = models.CharField(max_length=64, choices=STATUS_TYPES, default="incomplete")
+
+    def __str__(self) -> str:
+        return f"{self.id} {self.inspection}"
 
     def save(self, *args, **kwargs):
         """Maintain no_of_def in Inspection model"""
@@ -46,3 +59,11 @@ class DefImage(models.Model):
         "inspections.Deficiency", on_delete=models.CASCADE, related_name="images"
     )
     image = models.CharField(max_length=256)
+
+
+class DeficiencyReview(models.Model):
+    deficiency = models.OneToOneField(
+        "inspections.Deficiency", on_delete=models.CASCADE, related_name="reviews"
+    )
+    review = models.TextField()
+    created_at = models.DateField(auto_now_add=True)
