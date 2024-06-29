@@ -11,6 +11,11 @@ router = DefaultRouter()
 
 router.register(r"builder", admin.AdminBuilderViewset, basename="admin-builder")
 
+builder_trade_router = DefaultRouter()
+builder_trade_router.register(
+    r"trade", builder.BuilderTradeListView, basename="builder-trade"
+)
+
 urlpatterns = [
     re_path(r"user/admin/", include(router.urls)),
     path(
@@ -51,8 +56,8 @@ urlpatterns = [
         name="builder-employees",
     ),
     path(
-        "builder/trade/",
-        builder.BuilderTradeListView.as_view(),
-        name="builder-trade-list",
+        "builder/",
+        include(builder_trade_router.urls),
+        name="builder-trade-list-retrieve",
     ),
 ]

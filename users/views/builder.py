@@ -7,7 +7,9 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-class BuilderTradeListView(generics.ListAPIView):
+class BuilderTradeListView(
+    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin
+):
     serializer_class = builder.BuilderTradeListSerializer
     permission_classes = [permissions.IsAuthenticated, IsBuilder]
     queryset = User.objects.filter(user_type="trade")
