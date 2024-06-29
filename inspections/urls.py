@@ -38,4 +38,9 @@ urlpatterns = [
         builder.SendDeficiencyEmailView.as_view(),
         name="deficiency-email",
     ),
+    path(
+        "home/<uuid:home_id>/inspections/",
+        builder.HomeInspectionListView.as_view(),
+        name="home-inspections-list",
+    ),
 ]

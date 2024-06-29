@@ -1,4 +1,10 @@
-from inspections.models import Inspection, Deficiency, DefImage, HomeInspectionReview
+from inspections.models import (
+    Inspection,
+    Deficiency,
+    DefImage,
+    HomeInspectionReview,
+    HomeInspection,
+)
 from rest_framework import viewsets, generics
 from users.permissions import IsBuilder
 from users.models import User
@@ -14,6 +20,7 @@ from inspection_backend.settings import EMAIL_HOST
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from inspections.filters import DeficiencyFilter
+from projects.models import Home
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -113,3 +120,18 @@ class SendDeficiencyEmailView(APIView):
             return Response({"status": "success"}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HomeInspectionListView(generics.ListAPIView):
+    serializer_class = builder.HomeInspectionListSerializer
+    permission_classes = [IsAuthenticated, IsBuilder]
+    queryset = HomeInspection.objects.all()
+
+    def get_queryset(self):
+        home_id = self.kwargs.get("home_id")
+        home = get_object_or_404(Home, id=home_id)
+        return (
+            super()
+            .get_queryset()
+            .filter(inspection__builder=self.request.user, home=home)
+        )

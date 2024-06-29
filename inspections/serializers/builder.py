@@ -180,3 +180,18 @@ class DeficiencyEmailSerializer(serializers.Serializer):
         if deficiencies.count() != len(value):
             raise serializers.ValidationError("One or more deficiency IDs are invalid.")
         return value
+
+
+class HomeInspectionListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = HomeInspection
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        inspection = instance.inspection
+        representation["inspection"] = {"id": inspection.id, "name": inspection.name}
+        home_owner = instance.home.client
+        representation["owner"] = home_owner.get_full_name()
+        return representation
