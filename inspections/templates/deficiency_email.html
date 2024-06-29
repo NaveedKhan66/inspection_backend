@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Deficiency Report</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        .status-complete {
+            color: green;
+        }
+        .status-incomplete {
+            color: red;
+        }
+        .status-pending-approval {
+            color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <h2>Deficiency Report</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Inspection</th>
+                <th>Created At</th>
+                <th>Outstanding Days</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for deficiency in deficiencies %}
+                <tr>
+                    <td>{{ deficiency.id }}</td>
+                    <td>{{ deficiency.location }}</td>
+                   <td class="{% if deficiency.status == 'complete' %}status-complete{% elif deficiency.status == 'incomplete' %}status-incomplete{% elif deficiency.status == 'pending_approval' %}status-pending-approval{% endif %}">
+                        {{ deficiency.get_status_display }}
+                    </td>
+                    <td>{{ deficiency.inspection.name }}</td>
+                    <td>{{ deficiency.created_at }}</td>
+                    <td>{{ deficiency.outstanding_days }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

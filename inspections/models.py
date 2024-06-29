@@ -66,9 +66,10 @@ class DeficiencyReview(models.Model):
     deficiency = models.OneToOneField(
         "inspections.Deficiency", on_delete=models.CASCADE, related_name="reviews"
     )
-    review = models.TextField()
     created_at = models.DateField(auto_now_add=True)
     inspector_name = models.CharField(max_length=128, null=True, blank=True)
+    home_owner = models.CharField(max_length=128, null=True, blank=True)
+    designate = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         """Sets the is_reviewed field of deficiency to True when review is done"""

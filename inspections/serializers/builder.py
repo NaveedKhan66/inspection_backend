@@ -1,6 +1,9 @@
-from inspections.models import Inspection, Deficiency, DefImage
+from inspections.models import Inspection, Deficiency, DefImage, DeficiencyReview
 from rest_framework import serializers
 from datetime import date
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class InspectionSerializer(serializers.ModelSerializer):
@@ -94,3 +97,38 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
         else:
             delta = date.today() - obj.created_at
             return delta.days
+
+
+class DefReviewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DeficiencyReview
+        fields = "__all__"
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+        request = self.context.get("request")
+        builder = request.user
+
+        deficiency = validated_data.get("deficiency")
+
+        if deficiency.home.project.builder != builder:
+            raise serializers.ValidationError(
+                {"detail": "Deficiency belongs to another builder."}
+            )
+
+        return validated_data
+
+
+class DeficiencyEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    deficiency_ids = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
+    def validate_deficiency_ids(self, value):
+        # Check if all IDs correspond to existing Deficiency objects
+        deficiencies = Deficiency.objects.filter(id__in=value)
+        if deficiencies.count() != len(value):
+            raise serializers.ValidationError("One or more deficiency IDs are invalid.")
+        return value

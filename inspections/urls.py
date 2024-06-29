@@ -28,4 +28,14 @@ urlpatterns = [
         builder.BuilderTradeDeficiencyListView.as_view(),
         name="builder-trade-deficiency-list",
     ),
+    path(
+        "deficiency/review/",
+        builder.DefReviewCreateView.as_view(),
+        name="deficiency-review",
+    ),
+    path(
+        "deficiency/email/",
+        builder.SendDeficiencyEmailView.as_view(),
+        name="deficiency-email",
+    ),
 ]

@@ -1,10 +1,17 @@
-from inspections.models import Inspection, Deficiency, DefImage
+from inspections.models import Inspection, Deficiency, DefImage, DeficiencyReview
 from rest_framework import viewsets, generics
 from users.permissions import IsBuilder
 from users.models import User
 from inspections.serializers import builder
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from datetime import date
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+from inspection_backend.settings import EMAIL_HOST
+from rest_framework import status
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -74,3 +81,39 @@ class BuilderTradeDeficiencyListView(generics.ListAPIView):
                 return super().get_queryset().filter(trade=trade_user)
 
         return Deficiency.objects.none()
+
+
+class DefReviewCreateView(generics.CreateAPIView):
+    serializer_class = builder.DefReviewSerializer
+    permission_class = (IsAuthenticated, IsBuilder)
+    queryset = DeficiencyReview.objects.all()
+
+
+class SendDeficiencyEmailView(APIView):
+    serializer_class = builder.DeficiencyEmailSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            deficiency_ids = serializer.validated_data["deficiency_ids"]
+            deficiencies = Deficiency.objects.filter(id__in=deficiency_ids)
+
+            # Calculate outstanding days for each deficiency
+            for deficiency in deficiencies:
+                deficiency.outstanding_days = (
+                    date.today() - deficiency.created_at
+                ).days
+
+            # Render the email template with context
+            email_content = render_to_string(
+                "deficiency_email.html", {"deficiencies": deficiencies}
+            )
+
+            msg = EmailMultiAlternatives("Deficiency Report", "", EMAIL_HOST, [email])
+            msg.attach_alternative(email_content, "text/html")
+            msg.send()
+
+            return Response({"status": "success"}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
