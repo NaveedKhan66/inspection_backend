@@ -34,8 +34,34 @@ class DeficiencySerializer(serializers.ModelSerializer):
             "images",
             "created_at",
             "status",
+            "is_reviewed",
         ]
-        read_only_fields = ["inspection", "created_at"]
+        read_only_fields = ["inspection", "created_at", "is_reviewed"]
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+
+        # trade validations
+        trade = validated_data.get("trade")
+        if trade:
+            if trade.user_type != "trade":
+                raise serializers.ValidationError(
+                    {"detail": "Deficiecy can only be assigned to a trade."}
+                )
+            if trade.trade.builder.user != self.context["request"].user:
+                raise serializers.ValidationError(
+                    {"detail": "Trade belongs to another builder."}
+                )
+
+        home = validated_data.get("home")
+        project = validated_data.get("project")
+
+        if home.project != project:
+            raise serializers.ValidationError(
+                {"detail": "Deficiency and home must belong to the same project."}
+            )
+
+        return validated_data
 
     def create(self, validated_data):
         images_data = validated_data.pop("images", [])

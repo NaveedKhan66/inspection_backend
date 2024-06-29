@@ -23,4 +23,9 @@ urlpatterns = [
         builder.DefImageDeleteView.as_view(),
         name="deficiency-image-delete",
     ),
+    path(
+        "builder/trade/<uuid:trade_id>/deficiencies/",
+        builder.BuilderTradeDeficiencyListView.as_view(),
+        name="builder-trade-deficiency-list",
+    ),
 ]

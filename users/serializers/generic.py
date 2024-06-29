@@ -71,6 +71,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         queryset=User.objects.filter(user_type="builder"), required=False
     )
     role = serializers.CharField(max_length=255, required=False)
+    services = serializers.CharField(max_length=128, required=False)
 
     class Meta:
         model = User
@@ -89,6 +90,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             "profile_picture",
             "builder",
             "role",
+            "services",
         ]
         extra_kwargs = {
             "id": {"read_only": True},
@@ -162,7 +164,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
             client = Client.objects.create(user=user)
 
         elif user_type == "trade":
-            trade = Trade.objects.create(user=user, builder=request.user.builder)
+            services = validated_data.get("services")
+            trade = Trade.objects.create(
+                user=user, builder=request.user.builder, services=services
+            )
 
         elif user_type == "employee":
             builder_user = validated_data.get("builder")

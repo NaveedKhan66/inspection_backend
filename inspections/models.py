@@ -42,6 +42,7 @@ class Deficiency(models.Model):
     description = models.TextField()
     created_at = models.DateField(auto_now_add=True, null=True, blank=True)
     status = models.CharField(max_length=64, choices=STATUS_TYPES, default="incomplete")
+    is_reviewed = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.id} {self.inspection}"
@@ -67,3 +68,9 @@ class DeficiencyReview(models.Model):
     )
     review = models.TextField()
     created_at = models.DateField(auto_now_add=True)
+    inspector_name = models.CharField(max_length=128, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        """Sets the is_reviewed field of deficiency to True when review is done"""
+        self.deficiency.is_reviewed = True
+        return super().save(*args, **kwargs)

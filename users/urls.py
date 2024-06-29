@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import (
 )
 from users.views import admin
 from users.views import generic
+from users.views import builder
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -48,5 +49,10 @@ urlpatterns = [
         "user/admin/employee/<user__id>",
         admin.AdminBuilderEmployeeRetrieveUpdateDeleteView.as_view(),
         name="builder-employees",
+    ),
+    path(
+        "builder/trade/",
+        builder.BuilderTradeListView.as_view(),
+        name="builder-trade-list",
     ),
 ]

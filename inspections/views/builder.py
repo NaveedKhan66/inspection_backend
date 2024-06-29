@@ -56,3 +56,21 @@ class DefImageDeleteView(generics.DestroyAPIView):
             .get_queryset()
             .filter(deficiency__inspection__builder=self.request.user)
         )
+
+
+class BuilderTradeDeficiencyListView(generics.ListAPIView):
+    serializer_class = builder.DeficiencyListSerializer
+    permission_classes = (IsAuthenticated, IsBuilder)
+
+    queryset = Deficiency.objects.all()
+
+    def get_queryset(self):
+        trade_id = self.kwargs.get("trade_id")
+        trade_user = get_object_or_404(User, id=trade_id)
+
+        # Check if the builder is retrieving it's own trade's deficiencies
+        if trade_user.user_type == "trade":
+            if trade_user.trade.builder.user == self.request.user:
+                return super().get_queryset().filter(trade=trade_user)
+
+        return Deficiency.objects.none()
