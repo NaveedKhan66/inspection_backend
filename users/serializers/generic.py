@@ -197,6 +197,20 @@ class CreateUserSerializer(serializers.ModelSerializer):
             fail_silently=False,
         )
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.user_type == "trade":
+            representation["services"] = instance.trade.services
+            representation.pop("builder")
+
+        if instance.user_type == "builder" or instance.user_type == "client":
+            representation.pop("builder")
+
+        if instance.user_type == "employee":
+            representation["role"] = instance.employee.role
+
+        return representation
+
 
 class SetPasswordSerializer(serializers.Serializer):
     token = serializers.CharField()
