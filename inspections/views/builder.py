@@ -9,7 +9,7 @@ from rest_framework import viewsets, generics
 from users.permissions import IsBuilder
 from users.models import User
 from inspections.serializers import builder
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -124,7 +124,7 @@ class SendDeficiencyEmailView(APIView):
 
 class HomeInspectionListView(generics.ListAPIView):
     serializer_class = builder.HomeInspectionListSerializer
-    permission_classes = [IsAuthenticated, IsBuilder]
+    permission_classes = [IsAuthenticated, IsBuilder, IsAdminUser]
     queryset = HomeInspection.objects.all()
 
     def get_queryset(self):
