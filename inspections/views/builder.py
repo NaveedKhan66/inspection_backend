@@ -124,7 +124,7 @@ class SendDeficiencyEmailView(APIView):
 
 class HomeInspectionListView(generics.ListAPIView):
     serializer_class = builder.HomeInspectionListSerializer
-    permission_classes = [IsAuthenticated, IsBuilder, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsBuilder | IsAdminUser]
     queryset = HomeInspection.objects.all()
 
     def get_queryset(self):
