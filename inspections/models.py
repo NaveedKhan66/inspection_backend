@@ -19,7 +19,6 @@ class Inspection(models.Model):
 class HomeInspection(models.Model):
     inspection = models.ForeignKey("inspections.Inspection", on_delete=models.CASCADE)
     home = models.ForeignKey("projects.Home", on_delete=models.CASCADE)
-    inspector_name = models.CharField(max_length=128)
     created_at = models.DateField(auto_now_add=True)
     is_reviewed = models.BooleanField(default=False)
 
@@ -74,8 +73,9 @@ class HomeInspectionReview(models.Model):
         "inspections.HomeInspection", on_delete=models.CASCADE, related_name="review"
     )
     created_at = models.DateField(auto_now_add=True)
-    inspector_name = models.CharField(max_length=128, null=True, blank=True)
     designate = models.BooleanField(default=False)
+    owner_signature_image = models.CharField(max_length=256, null=True, blank=True)
+    inspector_signature_image = models.CharField(max_length=256, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """Sets the is_reviewed field of home inspection to True when review is done"""

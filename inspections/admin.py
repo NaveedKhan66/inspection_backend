@@ -1,5 +1,11 @@
 from django.contrib import admin
-from inspections.models import Inspection, Deficiency, DefImage, HomeInspection
+from inspections.models import (
+    Inspection,
+    Deficiency,
+    DefImage,
+    HomeInspection,
+    HomeInspectionReview,
+)
 
 # Register your models here.
 
@@ -31,3 +37,10 @@ class HomeInspectionAdmin(admin.ModelAdmin):
 
 
 admin.site.register(HomeInspection, HomeInspectionAdmin)
+
+
+class HomeInspectionReviewAdmin(admin.ModelAdmin):
+    list_display = ("id", "home_inspection", "created_at")
+
+
+admin.site.register(HomeInspectionReview, HomeInspectionReviewAdmin)

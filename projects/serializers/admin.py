@@ -41,9 +41,16 @@ class ProjectAssigneeSerializer(serializers.ModelSerializer):
 
 
 class ProjectBuilderSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ["id", "first_name", "last_name"]
+
+    def get_role(self, obj):
+        if obj.user_type == "employee":
+            return obj.builder.role
+        return None
 
 
 class ProjectListSerializer(serializers.ModelSerializer):

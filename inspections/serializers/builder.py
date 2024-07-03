@@ -36,7 +36,6 @@ class DeficiencySerializer(serializers.ModelSerializer):
     inspection = serializers.PrimaryKeyRelatedField(
         queryset=Inspection.objects.all(), write_only=True
     )
-    inspector_name = serializers.CharField(max_length=128, write_only=True)
 
     class Meta:
         model = Deficiency
@@ -77,7 +76,6 @@ class DeficiencySerializer(serializers.ModelSerializer):
         images_data = validated_data.pop("images", [])
         inspection = validated_data.pop("inspection")
         home = validated_data.pop("home")
-        inspector_name = validated_data.pop("inspector_name")
         home_inspection = None
 
         if HomeInspection.objects.filter(home=home, inspection=inspection).exists():
@@ -86,7 +84,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
             ).first()
         else:
             home_inspection = HomeInspection.objects.create(
-                home=home, inspection=inspection, inspector_name=inspector_name
+                home=home, inspection=inspection
             )
 
         validated_data["home_inspection"] = home_inspection
