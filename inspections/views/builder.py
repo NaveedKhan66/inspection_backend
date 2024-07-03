@@ -24,11 +24,13 @@ from projects.models import Home
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, IsBuilder, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsBuilder | IsAdminUser]
     serializer_class = builder.InspectionSerializer
     queryset = Inspection.objects.all()
 
     def get_queryset(self):
+        if self.request.user.user_type == "admin":
+            return super.get_queryset()
         return super().get_queryset().filter(builder=self.request.user)
 
     def perform_create(self, serializer):
