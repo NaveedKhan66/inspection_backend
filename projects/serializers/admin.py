@@ -39,7 +39,7 @@ class ProjectAssigneeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "profile_picture", "role"]
+        fields = ["id", "profile_picture", "role", "first_name", "last_name"]
 
     def get_role(self, obj):
         if obj.user_type == "employee":
