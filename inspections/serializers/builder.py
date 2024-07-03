@@ -50,7 +50,6 @@ class DeficiencySerializer(serializers.ModelSerializer):
             "is_reviewed",
             "home",
             "inspection",
-            "inspector_name",
             "home_inspection",
         ]
         read_only_fields = ["home_inspection", "created_at", "is_reviewed"]

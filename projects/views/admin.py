@@ -27,7 +27,7 @@ class ProjectViewset(viewsets.ModelViewSet):
 
 class BuilderProjectListView(generics.ListAPIView):
     serializer_class = ProjectListSerializer
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
     def get_queryset(self):
         builder_id = self.kwargs.get("builder_id")
