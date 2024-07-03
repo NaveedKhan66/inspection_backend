@@ -39,4 +39,4 @@ class BuilderProjectsRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ["id", "name", "builder", "no_of_homes", "assignees"]
+        fields = ["id", "name", "builder", "no_of_homes", "assignees", "vbn"]
