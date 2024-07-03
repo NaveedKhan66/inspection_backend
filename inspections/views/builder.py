@@ -24,7 +24,7 @@ from projects.models import Home
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, IsBuilder]
+    permission_classes = [IsAuthenticated, IsBuilder, IsAdminUser]
     serializer_class = builder.InspectionSerializer
     queryset = Inspection.objects.all()
 
