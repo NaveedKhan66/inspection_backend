@@ -61,7 +61,7 @@ urlpatterns = [
         name="builder-trade-list-retrieve",
     ),
     path(
-        "user/<uuid:pk>",
+        "user/<uuid:pk>/",
         admin.UserDeleteView.as_view(),
         name="user-delete",
     ),
