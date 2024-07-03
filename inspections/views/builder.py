@@ -30,7 +30,7 @@ class InspectionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.user_type == "admin":
-            return super.get_queryset()
+            return self.queryset
         return super().get_queryset().filter(builder=self.request.user)
 
     def perform_create(self, serializer):
