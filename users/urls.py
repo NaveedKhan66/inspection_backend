@@ -60,4 +60,9 @@ urlpatterns = [
         include(builder_trade_router.urls),
         name="builder-trade-list-retrieve",
     ),
+    path(
+        "user/<uuid:pk>",
+        admin.UserDeleteView.as_view(),
+        name="user-delete",
+    ),
 ]

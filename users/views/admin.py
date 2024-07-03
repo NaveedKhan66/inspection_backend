@@ -3,6 +3,7 @@ from rest_framework import generics, permissions
 from users.serializers.admin import AdminPasswordResetSerializer
 from users.serializers.admin import AdminBuilderSerializer
 from users.serializers.admin import AdminBuilderEmployeeSerializer
+from users.serializers.admin import UserSerializer
 from rest_framework import mixins
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
@@ -67,3 +68,11 @@ class AdminBuilderEmployeeRetrieveUpdateDeleteView(
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
     queryset = BuilderEmployee.objects.all()
     lookup_field = "user__id"
+
+
+class UserDeleteView(generics.DestroyAPIView):
+    """View to delete users"""
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
