@@ -38,7 +38,7 @@ class Home(models.Model):
     city = models.CharField(max_length=64, null=True, blank=True)
     province = models.CharField(max_length=64, null=True, blank=True)
     postal_code = models.CharField(max_length=32, null=True, blank=True)
-    enrollment_no = models.IntegerField(null=True, blank=True)
+    enrollment_no = models.IntegerField(unique=True)
     warranty_start_date = models.DateField(null=True, blank=True)
     home_type = models.CharField(max_length=64, null=True, blank=True)
     client = models.ForeignKey(

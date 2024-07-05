@@ -3,6 +3,7 @@ from projects.models import Project
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from projects.models import Home, BluePrint, BluePrintImage
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -140,8 +141,16 @@ class ProjectAssigneeListSerializer(serializers.ModelSerializer):
         fields = ["assignees"]
 
 
+def validate_enrollment_no(value):
+    if value == None:
+        raise serializers.ValidationError("Enrollment number cannot be empty")
+    return value
+
+
 class HomeSerializer(serializers.ModelSerializer):
     """General Home serializer"""
+
+    enrollment_no = serializers.IntegerField(validators=[validate_enrollment_no])
 
     class Meta:
         model = Home
@@ -150,9 +159,51 @@ class HomeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         if isinstance(validated_data, list):
-            # Bulk create
-            return Home.objects.bulk_create([Home(**item) for item in validated_data])
-        return super().create(validated_data)
+            # For bulk creation
+            enrollment_nos = [item["enrollment_no"] for item in validated_data]
+            addresses = [
+                item["address"] for item in validated_data if item.get("address")
+            ]
+            print("addresses: ", addresses)
+            print()
+            existing_homes = Home.objects.filter(
+                Q(enrollment_no__in=enrollment_nos) | Q(address__in=addresses)
+            )
+            existing_homes_dict = {home.enrollment_no: home for home in existing_homes}
+
+            new_homes = []
+            updated_homes = []
+            for item in validated_data:
+                enrollment_no = item["enrollment_no"]
+                if enrollment_no in existing_homes_dict:
+                    home = existing_homes_dict[enrollment_no]
+                    for key, value in item.items():
+                        setattr(home, key, value)
+                    updated_homes.append(home)
+                else:
+                    new_homes.append(Home(**item))
+
+            if new_homes:
+                Home.objects.bulk_create(new_homes)
+
+            if updated_homes:
+                Home.objects.bulk_update(
+                    updated_homes,
+                    fields=[
+                        f.name
+                        for f in Home._meta.fields
+                        if f.name not in ["id", "project"]
+                    ],
+                )
+
+            return new_homes + updated_homes
+
+        else:
+            home, created = Home.objects.filter(
+                Q(enrollment_no=validated_data.get("enrollment_no"))
+                | Q(address=validated_data.get("address"))
+            ).update_or_create(defaults=validated_data)
+            return home
 
 
 class ClientforHomeSerializer(serializers.ModelSerializer):
