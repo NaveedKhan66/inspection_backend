@@ -132,8 +132,4 @@ class HomeInspectionListView(generics.ListAPIView):
     def get_queryset(self):
         home_id = self.kwargs.get("home_id")
         home = get_object_or_404(Home, id=home_id)
-        return (
-            super()
-            .get_queryset()
-            .filter(inspection__builder=self.request.user, home=home)
-        )
+        return super().get_queryset().filter(home=home)
