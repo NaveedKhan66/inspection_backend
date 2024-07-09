@@ -164,8 +164,6 @@ class HomeSerializer(serializers.ModelSerializer):
             addresses = [
                 item["address"] for item in validated_data if item.get("address")
             ]
-            print("addresses: ", addresses)
-            print()
             existing_homes = Home.objects.filter(
                 Q(enrollment_no__in=enrollment_nos) | Q(address__in=addresses)
             )

@@ -21,6 +21,9 @@ from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from inspections.filters import DeficiencyFilter
 from projects.models import Home
+from rest_framework.views import APIView
+from projects.models import Project
+from users.models import Trade
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -43,6 +46,7 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = DeficiencyFilter
 
+    # TODO: add permission for admin to list deficiencies.
     def get_queryset(self):
         builder = self.request.user
         return Deficiency.objects.filter(home_inspection__inspection__builder=builder)
@@ -142,3 +146,133 @@ class HomeInspectionListView(generics.ListAPIView):
         home_id = self.kwargs.get("home_id")
         home = get_object_or_404(Home, id=home_id)
         return super().get_queryset().filter(home=home)
+
+
+class TotalDeficiencies(APIView):
+
+    permission_classes = [IsAuthenticated, IsBuilder]
+
+    def get(self, request, *args, **kwargs):
+        builder = request.user
+        deficiencies = Deficiency.objects.select_related("home_inspection").filter(
+            home_inspection__inspection__builder=builder
+        )
+        total_deficiencies = deficiencies.count()
+        complete_deficiencies = deficiencies.filter(status="complete").count()
+        incomplete_deficiencies = total_deficiencies - complete_deficiencies
+
+        response_data = {
+            "total_deficiencies": total_deficiencies,
+            "complete_deficiencies": complete_deficiencies,
+            "incomplete_deficiencies": incomplete_deficiencies,
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class ProjectTotalDeficiencies(APIView):
+
+    permission_classes = [IsAuthenticated, IsBuilder]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        # Get all projects where the builder is the current user
+        projects = Project.objects.filter(builder=user)
+        project_data = []
+
+        for project in projects:
+            # Get all homes in the current project
+            homes = project.homes.all()
+            home_ids = homes.values_list("id", flat=True)
+
+            # Get all deficiencies for these homes
+            deficiencies = Deficiency.objects.select_related("home_inspection").filter(
+                home_inspection__home__in=home_ids
+            )
+            total_deficiencies = deficiencies.count()
+            complete_deficiencies = deficiencies.filter(status="complete").count()
+            incomplete_deficiencies = total_deficiencies - complete_deficiencies
+
+            project_data.append(
+                {
+                    "id": project.id,
+                    "name": project.name,
+                    "total_deficiencies": total_deficiencies,
+                    "complete_deficiencies": complete_deficiencies,
+                    "incomplete_deficiencies": incomplete_deficiencies,
+                }
+            )
+
+        return Response(project_data, status=status.HTTP_200_OK)
+
+
+class DeficiencyFilterView(APIView):
+    permission_classes = [IsAuthenticated, IsBuilder]
+
+    def get(self, request, *args, **kwargs):
+        builder = request.user
+
+        inspection = request.query_params.get("inspection")
+        trade_name = request.query_params.get("trade")
+
+        builder_deficiencies = Deficiency.objects.select_related(
+            "home_inspection"
+        ).filter(home_inspection__inspection__builder=builder)
+        deficiencies = None
+
+        if inspection and trade_name:
+            deficiencies = builder_deficiencies.filter(
+                home_inspection__inspection__name=inspection,
+                trade__first_name__contains=trade_name,
+            )
+
+        elif inspection:
+            deficiencies = builder_deficiencies.filter(
+                home_inspection__inspection__name=inspection
+            )
+        elif trade_name:
+            deficiencies = builder_deficiencies.filter(
+                trade__first_name__contains=trade_name
+            )
+        else:
+            deficiencies = builder_deficiencies
+
+        total_deficiencies = deficiencies.count()
+        complete_deficiencies = deficiencies.filter(status="complete").count()
+        incomplete_deficiencies = total_deficiencies - complete_deficiencies
+        response_data = {
+            "total_deficiencies": total_deficiencies,
+            "complete_deficiencies": complete_deficiencies,
+            "incomplete_deficiencies": incomplete_deficiencies,
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class DeficiencyInspectionFilterView(APIView):
+
+    permission_classes = [IsAuthenticated, IsBuilder]
+
+    def get(self, request, *args, **kwargs):
+        builder = request.user
+        inspection = request.query_params.get("inspection")
+        deficiencies = None
+        if inspection:
+            deficiencies = Deficiency.objects.select_related("home_inspection").filter(
+                home_inspection__inspection__name=inspection,
+                home_inspection__inspection__builder=builder,
+            )
+        else:
+            deficiencies = Deficiency.objects.select_related("home_inspection").filter(
+                home_inspection__inspection__builder=builder
+            )
+        trades = Trade.objects.filter(builder=builder.builder)
+        response_data = []
+
+        for trade in trades:
+            response_data.append(
+                {
+                    "trade": trade.user.get_full_name(),
+                    "deficiencies": deficiencies.filter(trade=trade.user).count(),
+                }
+            )
+
+        return Response(response_data, status=status.HTTP_200_OK)

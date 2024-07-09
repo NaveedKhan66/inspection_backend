@@ -12,6 +12,9 @@ from rest_framework.views import APIView
 from django.db.models import Count, Prefetch
 from users.models import BuilderEmployee, Builder
 from users.permissions import IsAdminOrReadOnlyForBuilder
+from inspections.models import HomeInspection
+from inspections.models import Deficiency
+from users.permissions import IsBuilder
 
 
 class ProjectViewset(viewsets.ModelViewSet):
@@ -187,6 +190,50 @@ class DashboardAPIView(APIView):
                 "hold": hold_projects,
             },
             "builders_summary": builders_summary,
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class HomeDashboard(APIView):
+    """API to return data for home dashboard"""
+
+    permission_classes = [
+        permissions.IsAuthenticated,
+        permissions.IsAdminUser | IsBuilder,
+    ]
+
+    def get(self, request, *args, **kwargs):
+        total_homes = None
+        total_inspections = None
+        total_def = None
+
+        if request.user.user_type == "builder":
+            total_homes = (
+                Home.objects.select_related("project")
+                .filter(project__builder=request.user)
+                .count()
+            )
+            home_inspections = HomeInspection.objects.select_related(
+                "inspection"
+            ).filter(inspection__builder=request.user)
+            total_inspections = home_inspections.count()
+            # Counting deficiencies of selected home inspections to find total deficiencies
+            # This is better than retrieving total deficiencies from Deficiency db
+            def_count = 0
+            for inspection in home_inspections:
+                def_count += inspection.deficiencies.count()
+
+            total_def = def_count
+        else:
+            total_homes = Home.objects.all().count()
+            total_inspections = HomeInspection.objects.all().count()
+            total_def = Deficiency.objects.all().count()
+
+        response_data = {
+            "total_homes": total_homes,
+            "total_inspections": total_inspections,
+            "total_deficiencies": total_def,
         }
 
         return Response(response_data, status=status.HTTP_200_OK)

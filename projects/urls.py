@@ -55,5 +55,6 @@ urlpatterns = [
         name="builder-project-list",
     ),
     path("dashboard/", admin.DashboardAPIView.as_view(), name="dashboard-api"),
+    path("home-dashboard/", admin.HomeDashboard.as_view(), name="home-dashboard"),
     path(r"", include(builder_project_router.urls)),
 ]

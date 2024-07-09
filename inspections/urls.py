@@ -43,4 +43,24 @@ urlpatterns = [
         builder.HomeInspectionListView.as_view(),
         name="home-inspections-list",
     ),
+    path(
+        "deficiencies-overview/",
+        builder.TotalDeficiencies.as_view(),
+        name="total-deficiencies",
+    ),
+    path(
+        "project-deficiencies-overview/",
+        builder.ProjectTotalDeficiencies.as_view(),
+        name="deficiencies-overview",
+    ),
+    path(
+        "deficiencies-filter/",
+        builder.DeficiencyFilterView.as_view(),
+        name="deficiencies-filter",
+    ),
+    path(
+        "inspection/deficiencies-filter/",
+        builder.DeficiencyInspectionFilterView.as_view(),
+        name="deficiencies-inspection-filter",
+    ),
 ]
