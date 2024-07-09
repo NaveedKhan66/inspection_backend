@@ -56,6 +56,15 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
 
         return serializer_class
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        inspection = instance.home_inspection.inspection
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            inspection.no_of_def -= 1
+            inspection.save()
+        return response
+
 
 class DefImageDeleteView(generics.DestroyAPIView):
     serializer_class = builder.DefImageSerializer
