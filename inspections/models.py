@@ -56,9 +56,14 @@ class Deficiency(models.Model):
     def save(self, *args, **kwargs):
         """Maintain no_of_def in Inspection model"""
 
+        is_new = self.pk is None
+
         super().save(*args, **kwargs)
-        self.home_inspection.inspection.no_of_def += 1
-        self.home_inspection.inspection.save()
+
+        # Only increase the deficiency count if the deficiency is created
+        if is_new:
+            self.home_inspection.inspection.no_of_def += 1
+            self.home_inspection.inspection.save()
 
 
 class DefImage(models.Model):
