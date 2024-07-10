@@ -109,6 +109,17 @@ class HomeViewSet(viewsets.ModelViewSet):
             # For single creation
             return super().create(request, *args, **kwargs)
 
+    def destroy(self, request, *args, **kwargs):
+        """Reduce no_of_homes count in project when a home is deleted"""
+
+        instance = self.get_object()
+        project = instance.project
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            project.no_of_homes -= 1
+            project.save()
+        return response
+
 
 class BluePrintViewSet(viewsets.ModelViewSet):
     queryset = BluePrint.objects.all()
