@@ -201,6 +201,11 @@ class HomeSerializer(serializers.ModelSerializer):
                 Q(enrollment_no=validated_data.get("enrollment_no"))
                 | Q(address=validated_data.get("address"))
             ).update_or_create(defaults=validated_data)
+
+            if created:
+                """Handle no_of_homes of project upon creation"""
+                home.project.no_of_homes += 1
+                home.project.save()
             return home
 
 

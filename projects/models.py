@@ -55,18 +55,6 @@ class Home(models.Model):
     def __str__(self):
         return f"{self.id} {self.enrollment_no}"
 
-    def save(self, *args, **kwargs):
-        """Maintain no_of_homes in Project model"""
-
-        is_new = self.pk is None
-
-        super().save(*args, **kwargs)
-
-        # Only increase the home count if the home is created
-        if is_new:
-            self.project.no_of_homes += 1
-            self.project.save()
-
 
 class BluePrint(models.Model):
     label = models.CharField(max_length=64, null=True, blank=True)
