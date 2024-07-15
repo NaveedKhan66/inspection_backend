@@ -268,10 +268,17 @@ class DeficiencyInspectionFilterView(APIView):
         response_data = []
 
         for trade in trades:
+            total_deficiencies = deficiencies.count()
+            complete_deficiencies = deficiencies.filter(
+                trade=trade.user, status="complete"
+            ).count()
+            incomplete_deficiencies = total_deficiencies - complete_deficiencies
             response_data.append(
                 {
                     "trade": trade.user.get_full_name(),
                     "deficiencies": deficiencies.filter(trade=trade.user).count(),
+                    "complete_deficiencies": complete_deficiencies,
+                    "incomplete_deficiencies": incomplete_deficiencies,
                 }
             )
 
