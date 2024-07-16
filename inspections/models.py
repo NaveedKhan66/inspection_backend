@@ -73,6 +73,18 @@ class DefImage(models.Model):
     image = models.CharField(max_length=256)
 
 
+class DeficiencyUpdateLog(models.Model):
+    deficiency = models.ForeignKey(
+        Deficiency, on_delete=models.CASCADE, related_name="update_logs"
+    )
+    actor_name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField()
+
+    def __str__(self):
+        return f"Update on Deficiency {self.deficiency.id} by {self.actor_name}"
+
+
 class HomeInspectionReview(models.Model):
     home_inspection = models.OneToOneField(
         "inspections.HomeInspection", on_delete=models.CASCADE, related_name="review"

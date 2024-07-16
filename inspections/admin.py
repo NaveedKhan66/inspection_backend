@@ -5,6 +5,7 @@ from inspections.models import (
     DefImage,
     HomeInspection,
     HomeInspectionReview,
+    DeficiencyUpdateLog,
 )
 
 # Register your models here.
@@ -23,6 +24,13 @@ class DeficiencyAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Deficiency, DeficiencyAdmin)
+
+
+class DeficiencyUpdateLogAdmin(admin.ModelAdmin):
+    list_display = ("id", "actor_name", "created_at")
+
+
+admin.site.register(DeficiencyUpdateLog, DeficiencyUpdateLogAdmin)
 
 
 class DefImageAdmin(admin.ModelAdmin):

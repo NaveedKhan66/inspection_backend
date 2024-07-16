@@ -68,4 +68,9 @@ urlpatterns = [
         trade.TradeDeficiencyListView.as_view(),
         name="trade-deficiencies-list",
     ),
+    path(
+        "deficiencies/<int:id>/update-logs/",
+        trade.DeficiencyUpdateLogListView.as_view(),
+        name="deficiency-update-logs",
+    ),
 ]

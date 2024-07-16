@@ -4,11 +4,13 @@ from inspections.models import (
     DefImage,
     HomeInspectionReview,
     HomeInspection,
+    DeficiencyUpdateLog,
 )
 from rest_framework import serializers
 from datetime import date
 from django.contrib.auth import get_user_model
 from projects.models import Home
+from django.db import transaction
 
 User = get_user_model()
 
@@ -93,13 +95,65 @@ class DeficiencySerializer(serializers.ModelSerializer):
             DefImage.objects.create(deficiency=deficiency, **image_data)
         return deficiency
 
+    @transaction.atomic
     def update(self, instance, validated_data):
+        request = self.context.get("request")
+        actor = request.user if request else None
+
+        # Track changes
+        changes = []
+
+        # Check for location change
+        if (
+            "location" in validated_data
+            and validated_data["location"] != instance.location
+        ):
+            changes.append(
+                f"Location Changed: '{instance.location}' to '{validated_data['location']}'"
+            )
+
+        # Check for trade change
+        if "trade" in validated_data and validated_data["trade"] != instance.trade:
+            old_trade = instance.trade.get_full_name() if instance.trade else "None"
+            new_trade = (
+                validated_data["trade"].get_full_name()
+                if validated_data["trade"]
+                else "None"
+            )
+            changes.append(f"Trade Changed: {old_trade} to {new_trade}")
+
+        # Check for description change
+        if (
+            "description" in validated_data
+            and validated_data["description"] != instance.description
+        ):
+            changes.append("Description Changed")
+
+        # Check for status change
+        if "status" in validated_data and validated_data["status"] != instance.status:
+            changes.append(
+                f"Status Changed: {instance.status} to {validated_data['status']}"
+            )
+
+        # Check for image additions
         images_data = validated_data.pop("images", [])
+        if images_data:
+            changes.append("Images Changed: New images added.")
 
-        super().update(instance, validated_data)
+        # Update the instance
+        instance = super().update(instance, validated_data)
 
+        # Create DefImage objects for new images
         for image_data in images_data:
             DefImage.objects.create(deficiency=instance, **image_data)
+
+        # Create update logs for all changes
+        for change in changes:
+            DeficiencyUpdateLog.objects.create(
+                deficiency=instance,
+                actor_name=actor.get_full_name() if actor else "System",
+                description=change,
+            )
 
         return instance
 
