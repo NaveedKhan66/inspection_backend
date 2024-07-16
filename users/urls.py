@@ -65,4 +65,9 @@ urlpatterns = [
         admin.UserDeleteView.as_view(),
         name="user-delete",
     ),
+    path(
+        "builder/owner/invite/",
+        builder.OwnerInviteView.as_view(),
+        name="owner-invite",
+    ),
 ]

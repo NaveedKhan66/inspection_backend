@@ -81,6 +81,7 @@ class Client(models.Model):
         default=uuid.uuid4, primary_key=True, db_index=True, editable=False
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="client")
+    is_invited = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user}"

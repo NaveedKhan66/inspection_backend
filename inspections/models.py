@@ -21,6 +21,7 @@ class HomeInspection(models.Model):
     home = models.ForeignKey("projects.Home", on_delete=models.CASCADE)
     created_at = models.DateField(auto_now_add=True)
     is_reviewed = models.BooleanField(default=False)
+    owner_visibility = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.id} {self.inspection.name}"

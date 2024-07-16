@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from projects.models import Home, BluePrint, BluePrintImage
 from django.db.models import Q
+from users.models import Client
 
 User = get_user_model()
 
@@ -206,7 +207,57 @@ class HomeSerializer(serializers.ModelSerializer):
                 """Handle no_of_homes of project upon creation"""
                 home.project.no_of_homes += 1
                 home.project.save()
+            owner_email = validated_data.get("owner_email")
+            owner_name = validated_data.get("owner_name")
+            owner_no = validated_data.get("owner_no")
+            owner_created = False
+            if owner_email:
+                try:
+                    user = User.objects.get(username=owner_email)
+                except User.DoesNotExist:
+                    owner_created = True
+                    user = User.objects.create(
+                        username=owner_email,
+                        email=owner_email,
+                        first_name=owner_name,
+                        phone_no=owner_no,
+                        user_type="client",
+                    )
+
+                user.set_unusable_password()
+                user.save()
+                if owner_created:
+                    client_profile = Client.objects.create(user=user)
+
+                home.client = user
+                home.save()
             return home
+
+    def update(self, instance, validated_data):
+        owner_email = validated_data.get("owner_email")
+        owner_name = validated_data.get("owner_name")
+        owner_no = validated_data.get("owner_no")
+        owner_created = False
+        if owner_email:
+            try:
+                user = User.objects.get(username=owner_email)
+            except User.DoesNotExist:
+                owner_created = True
+                user = User.objects.create(
+                    username=owner_email,
+                    email=owner_email,
+                    first_name=owner_name,
+                    phone_no=owner_no,
+                    user_type="client",
+                )
+
+            user.set_unusable_password()
+            user.save()
+            if owner_created:
+                client_profile = Client.objects.create(user=user)
+            instance.client = user
+            instance.save()
+        return super().update(instance, validated_data)
 
 
 class ClientforHomeSerializer(serializers.ModelSerializer):
