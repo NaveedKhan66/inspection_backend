@@ -11,6 +11,7 @@ from datetime import date
 from django.contrib.auth import get_user_model
 from projects.models import Home
 from django.db import transaction
+from django.utils.text import Truncator
 
 User = get_user_model()
 
@@ -127,7 +128,9 @@ class DeficiencySerializer(serializers.ModelSerializer):
             "description" in validated_data
             and validated_data["description"] != instance.description
         ):
-            changes.append("Description Changed")
+            old_desc = Truncator(instance.description).chars(30)
+            new_desc = Truncator(validated_data["description"]).chars(30)
+            changes.append(f"Description Changed: From '{old_desc}' to '{new_desc}'")
 
         # Check for status change
         if "status" in validated_data and validated_data["status"] != instance.status:
