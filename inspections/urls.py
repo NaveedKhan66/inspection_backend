@@ -1,5 +1,5 @@
 from django.urls import path, include
-from inspections.views import builder
+from inspections.views import builder, trade
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -62,5 +62,10 @@ urlpatterns = [
         "inspection/deficiencies-filter/",
         builder.DeficiencyInspectionFilterView.as_view(),
         name="deficiencies-inspection-filter",
+    ),
+    path(
+        "trade/deficiencies/",
+        trade.TradeDeficiencyListView.as_view(),
+        name="trade-deficiencies-list",
     ),
 ]

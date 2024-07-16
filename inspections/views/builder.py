@@ -24,6 +24,7 @@ from projects.models import Home
 from rest_framework.views import APIView
 from projects.models import Project
 from users.models import Trade
+from users.permissions import IsTrade
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -42,7 +43,7 @@ class InspectionViewSet(viewsets.ModelViewSet):
 
 class DeficiencyViewSet(viewsets.ModelViewSet):
     serializer_class = builder.DeficiencySerializer
-    permission_classes = [IsAuthenticated, IsBuilder]
+    permission_classes = [IsAuthenticated, IsBuilder | IsTrade]
     filter_backends = [DjangoFilterBackend]
     filterset_class = DeficiencyFilter
 

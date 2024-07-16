@@ -62,7 +62,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
         if trade:
             if trade.user_type != "trade":
                 raise serializers.ValidationError(
-                    {"detail": "Deficiecy can only be assigned to a trade."}
+                    {"detail": "Deficiency can only be assigned to a trade."}
                 )
             if trade.trade.builder.user != self.context["request"].user:
                 raise serializers.ValidationError(
