@@ -39,6 +39,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
     inspection = serializers.PrimaryKeyRelatedField(
         queryset=Inspection.objects.all(), write_only=True
     )
+    owner_visibility = serializers.BooleanField(required=False, write_only=True)
 
     class Meta:
         model = Deficiency
@@ -78,15 +79,16 @@ class DeficiencySerializer(serializers.ModelSerializer):
         images_data = validated_data.pop("images", [])
         inspection = validated_data.pop("inspection")
         home = validated_data.pop("home")
+        owner_visibility = validated_data.pop("owner_visibility", False)
         home_inspection = None
 
-        if HomeInspection.objects.filter(home=home, inspection=inspection).exists():
-            home_inspection = HomeInspection.objects.filter(
+        try:
+            home_inspection = HomeInspection.objects.get(
                 home=home, inspection=inspection
-            ).first()
-        else:
+            )
+        except HomeInspection.DoesNotExist:
             home_inspection = HomeInspection.objects.create(
-                home=home, inspection=inspection
+                home=home, inspection=inspection, owner_visibility=owner_visibility
             )
 
         validated_data["home_inspection"] = home_inspection
@@ -142,6 +144,11 @@ class DeficiencySerializer(serializers.ModelSerializer):
         images_data = validated_data.pop("images", [])
         if images_data:
             changes.append("Images Changed: New images added.")
+
+        if "owner_visibility" in validated_data:
+            owner_visibility = validated_data.pop("owner_visibility")
+            instance.home_inspection.owner_visibility = owner_visibility
+            instance.home_inspection.save()
 
         # Update the instance
         instance = super().update(instance, validated_data)
