@@ -76,6 +76,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "province",
             "postal_code",
             "address",
+            "logo",
         ]
 
 

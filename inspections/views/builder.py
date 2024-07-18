@@ -49,8 +49,13 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
 
     # TODO: add permission for admin to list deficiencies.
     def get_queryset(self):
-        builder = self.request.user
-        return Deficiency.objects.filter(home_inspection__inspection__builder=builder)
+        user = self.request.user
+        if user.user_type == "builder":
+            return Deficiency.objects.filter(home_inspection__inspection__builder=user)
+        elif user.user_type == "trade":
+            return Deficiency.objects.filter(trade=user)
+        else:
+            return Deficiency.objects.none()
 
     def get_serializer_class(self):
         serializer_class = super().get_serializer_class()
