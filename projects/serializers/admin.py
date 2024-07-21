@@ -152,7 +152,7 @@ def validate_enrollment_no(value):
 class HomeSerializer(serializers.ModelSerializer):
     """General Home serializer"""
 
-    enrollment_no = serializers.IntegerField(validators=[validate_enrollment_no])
+    enrollment_no = serializers.CharField(validators=[validate_enrollment_no])
 
     class Meta:
         model = Home
