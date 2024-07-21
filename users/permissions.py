@@ -7,6 +7,12 @@ class IsBuilder(permissions.IsAuthenticated):
         return request.user.user_type == "builder"
 
 
+class IsEmployee(permissions.IsAuthenticated):
+
+    def has_permission(self, request, view):
+        return request.user.user_type == "emplyee"
+
+
 class IsTrade(permissions.IsAuthenticated):
 
     def has_permission(self, request, view):
@@ -20,7 +26,9 @@ class IsAdminOrReadOnlyForBuilder(permissions.BasePermission):
             return True
 
         # Allow only read-only actions (GET, HEAD, OPTIONS) for builders
-        if request.user and request.user.user_type == "builder":
+        if request.user and (
+            request.user.user_type == "builder" or request.user.user_type == "employee"
+        ):
             if view.action in ["list", "retrieve"]:
                 return True
 

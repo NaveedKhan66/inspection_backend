@@ -2,6 +2,7 @@ from users.serializers import builder
 from rest_framework import viewsets, mixins, generics
 from rest_framework import permissions
 from users.permissions import IsBuilder
+from users.permissions import IsEmployee
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
@@ -18,11 +19,17 @@ class BuilderTradeListView(
     viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin
 ):
     serializer_class = builder.BuilderTradeListSerializer
-    permission_classes = [permissions.IsAuthenticated, IsBuilder]
+    permission_classes = [permissions.IsAuthenticated, IsBuilder | IsEmployee]
     queryset = User.objects.filter(user_type="trade")
 
     def get_queryset(self):
-        return super().get_queryset().filter(trade__builder__user=self.request.user)
+        user = None
+        if self.request.user.user_type == "builder":
+            user = self.request.user
+        elif self.request.user.user_type == "employee":
+            user = self.request.user.employee.builder.user
+
+        return super().get_queryset().filter(trade__builder__user=user)
 
 
 class OwnerInviteView(APIView):

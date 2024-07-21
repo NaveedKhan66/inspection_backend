@@ -15,6 +15,7 @@ from users.permissions import IsAdminOrReadOnlyForBuilder
 from inspections.models import HomeInspection
 from inspections.models import Deficiency
 from users.permissions import IsBuilder
+from users.permissions import IsEmployee
 
 
 class ProjectViewset(viewsets.ModelViewSet):
@@ -73,8 +74,12 @@ class HomeViewSet(viewsets.ModelViewSet):
         if user.user_type == "admin":
             project = get_object_or_404(Project, id=project_id)
 
-        elif user.user_type == "builder":
+        elif user.user_type == "builder" or user.user_type == "employee":
             """allow builders to get homes for their own projects"""
+
+            if user.user_type == "employee":
+                user = user.employee.builder.user
+
             project = get_object_or_404(Project, id=project_id, builder=user)
 
         queryset = Home.objects.filter(project=project)
@@ -211,7 +216,7 @@ class HomeDashboard(APIView):
 
     permission_classes = [
         permissions.IsAuthenticated,
-        permissions.IsAdminUser | IsBuilder,
+        permissions.IsAdminUser | IsBuilder | IsEmployee,
     ]
 
     def get(self, request, *args, **kwargs):
@@ -219,18 +224,26 @@ class HomeDashboard(APIView):
         total_inspections = None
         total_def = None
 
-        if request.user.user_type == "builder":
+        if request.user.user_type == "builder" or request.user.user_type == "employee":
+            user = None
+            if request.user.user_type == "builder":
+                user = request.user
+            elif request.user.user_type == "employee":
+                user = request.user.employee.builder.user
+
             total_homes = (
                 Home.objects.select_related("project")
-                .filter(project__builder=request.user)
+                .filter(project__builder=user)
                 .count()
             )
             home_inspections = HomeInspection.objects.select_related(
                 "inspection"
-            ).filter(inspection__builder=request.user)
+            ).filter(inspection__builder=user)
             total_inspections = home_inspections.count()
+
             # Counting deficiencies of selected home inspections to find total deficiencies
             # This is better than retrieving total deficiencies from Deficiency db
+
             def_count = 0
             for inspection in home_inspections:
                 def_count += inspection.deficiencies.count()

@@ -7,6 +7,7 @@ from inspections.models import (
 )
 from rest_framework import viewsets, generics
 from users.permissions import IsBuilder
+from users.permissions import IsEmployee
 from users.models import User
 from inspections.serializers import builder
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -25,17 +26,25 @@ from rest_framework.views import APIView
 from projects.models import Project
 from users.models import Trade
 from users.permissions import IsTrade
+from users.permissions import IsEmployee
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, IsBuilder | IsAdminUser]
+    permission_classes = [IsAuthenticated, IsBuilder | IsAdminUser | IsEmployee]
     serializer_class = builder.InspectionSerializer
     queryset = Inspection.objects.all()
 
     def get_queryset(self):
         if self.request.user.user_type == "admin":
             return self.queryset
-        return super().get_queryset().filter(builder=self.request.user)
+
+        user = None
+        if self.request.user.user_type == "builder":
+            user = self.request.user
+        elif self.request.user.user_type == "employee":
+            user = self.request.user.employee.builder.user
+
+        return super().get_queryset().filter(builder=user)
 
     def perform_create(self, serializer):
         serializer.save(builder=self.request.user)
@@ -43,14 +52,18 @@ class InspectionViewSet(viewsets.ModelViewSet):
 
 class DeficiencyViewSet(viewsets.ModelViewSet):
     serializer_class = builder.DeficiencySerializer
-    permission_classes = [IsAuthenticated, IsBuilder | IsTrade]
+    permission_classes = [IsAuthenticated, IsBuilder | IsTrade | IsEmployee]
     filter_backends = [DjangoFilterBackend]
     filterset_class = DeficiencyFilter
 
     # TODO: add permission for admin to list deficiencies.
     def get_queryset(self):
         user = self.request.user
-        if user.user_type == "builder":
+        if user.user_type == "builder" or user.user_type == "employee":
+
+            if user.user_type == "employee":
+                user = user.employee.builder.user
+
             return Deficiency.objects.filter(home_inspection__inspection__builder=user)
         elif user.user_type == "trade":
             return Deficiency.objects.filter(trade=user)
@@ -91,7 +104,7 @@ class DefImageDeleteView(generics.DestroyAPIView):
 
 class BuilderTradeDeficiencyListView(generics.ListAPIView):
     serializer_class = builder.DeficiencyListSerializer
-    permission_classes = (IsAuthenticated, IsBuilder)
+    permission_classes = (IsAuthenticated, IsBuilder | IsEmployee)
 
     queryset = Deficiency.objects.all()
 
@@ -100,8 +113,15 @@ class BuilderTradeDeficiencyListView(generics.ListAPIView):
         trade_user = get_object_or_404(User, id=trade_id)
 
         # Check if the builder is retrieving it's own trade's deficiencies
+        user = None
+
+        if self.request.user.user_type == "builder":
+            user = self.request.user
+        elif self.request.user.user_type == "employee":
+            user = self.request.user.employee.builder.user
+
         if trade_user.user_type == "trade":
-            if trade_user.trade.builder.user == self.request.user:
+            if trade_user.trade.builder.user == user:
                 return super().get_queryset().filter(trade=trade_user)
 
         return Deficiency.objects.none()
@@ -145,7 +165,7 @@ class SendDeficiencyEmailView(APIView):
 
 class HomeInspectionListView(generics.ListAPIView):
     serializer_class = builder.HomeInspectionListSerializer
-    permission_classes = [IsAuthenticated, IsBuilder | IsAdminUser]
+    permission_classes = [IsAuthenticated, IsBuilder | IsAdminUser | IsEmployee]
     queryset = HomeInspection.objects.all()
 
     def get_queryset(self):
@@ -156,10 +176,15 @@ class HomeInspectionListView(generics.ListAPIView):
 
 class TotalDeficiencies(APIView):
 
-    permission_classes = [IsAuthenticated, IsBuilder]
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee]
 
     def get(self, request, *args, **kwargs):
-        builder = request.user
+        builder = None
+        if request.user.user_type == "builder":
+            builder = request.user
+        elif request.user.user_type == "employee":
+            builder = request.user.employee.builder.user
+
         deficiencies = Deficiency.objects.select_related("home_inspection").filter(
             home_inspection__inspection__builder=builder
         )
@@ -177,10 +202,16 @@ class TotalDeficiencies(APIView):
 
 class ProjectTotalDeficiencies(APIView):
 
-    permission_classes = [IsAuthenticated, IsBuilder]
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee]
 
     def get(self, request, *args, **kwargs):
-        user = request.user
+        user = None
+
+        if request.user.user_type == "builder":
+            user = request.user
+        elif request.user.user_type == "employee":
+            user = request.user.employee.builder.user
+
         # Get all projects where the builder is the current user
         projects = Project.objects.filter(builder=user)
         project_data = []
@@ -255,10 +286,16 @@ class DeficiencyFilterView(APIView):
 
 class DeficiencyInspectionFilterView(APIView):
 
-    permission_classes = [IsAuthenticated, IsBuilder]
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee]
 
     def get(self, request, *args, **kwargs):
-        builder = request.user
+        builder = None
+
+        if self.request.user.user_type == "builder":
+            builder = self.request.user
+        elif self.request.user.user_type == "employee":
+            builder = self.request.user.employee.builder.user
+
         inspection = request.query_params.get("inspection")
         deficiencies = None
         if inspection:
