@@ -10,7 +10,7 @@ class IsBuilder(permissions.IsAuthenticated):
 class IsEmployee(permissions.IsAuthenticated):
 
     def has_permission(self, request, view):
-        return request.user.user_type == "emplyee"
+        return request.user.user_type == "employee"
 
 
 class IsTrade(permissions.IsAuthenticated):
