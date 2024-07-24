@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from datetime import date
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
-from inspection_backend.settings import EMAIL_HOST
+from inspection_backend.settings import EMAIL_HOST_USER
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from inspections.filters import DeficiencyFilter
@@ -154,7 +154,9 @@ class SendDeficiencyEmailView(APIView):
                 "deficiency_email.html", {"deficiencies": deficiencies}
             )
 
-            msg = EmailMultiAlternatives("Deficiency Report", "", EMAIL_HOST, [email])
+            msg = EmailMultiAlternatives(
+                "Deficiency Report", "", EMAIL_HOST_USER, [email]
+            )
             msg.attach_alternative(email_content, "text/html")
             msg.send()
 

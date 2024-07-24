@@ -46,6 +46,11 @@ urlpatterns = [
         name="set-user-password",
     ),
     path(
+        "auth/forget-password/",
+        generic.ForgetPasswordView.as_view(),
+        name="forget-password",
+    ),
+    path(
         "user/admin/builder/<id>/employees/",
         admin.AdminBuilderEmployeeListView.as_view(),
         name="builder-employees-list",

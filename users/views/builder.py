@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework import status
 from django.core.mail import send_mail
-from inspection_backend.settings import EMAIL_HOST
+from inspection_backend.settings import EMAIL_HOST_USER
 from inspection_backend.settings import RESET_PASSOWRD_LINK
 
 User = get_user_model()
@@ -47,7 +47,7 @@ class OwnerInviteView(APIView):
                     send_mail(
                         "Inspection Invitation",
                         text,
-                        EMAIL_HOST,
+                        EMAIL_HOST_USER,
                         [owner.email],
                         fail_silently=False,
                     )
@@ -57,7 +57,7 @@ class OwnerInviteView(APIView):
                     send_mail(
                         "Reset your password",
                         f"Click the link to set your password: {link}",
-                        EMAIL_HOST,
+                        EMAIL_HOST_USER,
                         [owner.email],
                         fail_silently=False,
                     )

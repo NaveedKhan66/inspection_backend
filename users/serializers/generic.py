@@ -3,12 +3,14 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import AccessToken
-from inspection_backend.settings import EMAIL_HOST
+from inspection_backend.settings import EMAIL_HOST_USER
 from inspection_backend.settings import RESET_PASSOWRD_LINK
 from users.models import Builder
 from users.models import Trade
 from users.models import Client
 from users.models import BuilderEmployee
+from users.models import BlacklistedToken
+from users.utils import send_reset_email
 
 User = get_user_model()
 
@@ -180,22 +182,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
         token = AccessToken.for_user(user)
 
         # Send email with token
-        self.send_reset_email(user.email, str(token))
+        send_reset_email(user.email, str(token))
 
         return user
-
-    def send_reset_email(self, email, token):
-
-        from django.core.mail import send_mail
-
-        link = f"{RESET_PASSOWRD_LINK}?token={token}"
-        send_mail(
-            "Reset your password",
-            f"Click the link to set your password: {link}",
-            EMAIL_HOST,
-            [email],
-            fail_silently=False,
-        )
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -212,8 +201,16 @@ class CreateUserSerializer(serializers.ModelSerializer):
         return representation
 
 
+def validate_token_not_blacklisted(value):
+    if BlacklistedToken.objects.filter(token=value).exists():
+        raise serializers.ValidationError(
+            "This token has already been used and is no longer valid."
+        )
+    return value
+
+
 class SetPasswordSerializer(serializers.Serializer):
-    token = serializers.CharField()
+    token = serializers.CharField(validators=[validate_token_not_blacklisted])
     password = serializers.CharField()
 
     def validate_token(self, value):
@@ -231,3 +228,9 @@ class SetPasswordSerializer(serializers.Serializer):
         user = self.user
         user.set_password(self.validated_data["password"])
         user.save()
+        # Blacklist the token
+        BlacklistedToken.objects.create(token=self.validated_data["token"])
+
+
+class ForgetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()

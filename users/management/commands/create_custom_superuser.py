@@ -13,7 +13,7 @@ class Command(BaseCommand):
         email = os.getenv("DJANGO_SUPERUSER_EMAIL")
         if not User.objects.filter(email=email).exists():
             User.objects.create_superuser(
-                username=username, email=email, password=password
+                username=username, email=email, password=password, user_type="admin"
             )
             self.stdout.write(self.style.SUCCESS("Superuser created successfully"))
         else:

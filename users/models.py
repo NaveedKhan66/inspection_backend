@@ -87,4 +87,9 @@ class Client(models.Model):
         return f"{self.user}"
 
 
-# TODO: remove profile uuids from the models. There should only be user uuid
+class BlacklistedToken(models.Model):
+    token = models.CharField(max_length=500, unique=True)
+    blacklisted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Blacklisted token {self.token[:10]}..."

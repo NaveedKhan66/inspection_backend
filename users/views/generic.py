@@ -6,8 +6,13 @@ from users.serializers.generic import UpdateFirstLoginSerializer
 from users.serializers.generic import UpdateUserDetailSerializer
 from users.serializers.generic import CreateUserSerializer
 from users.serializers.generic import SetPasswordSerializer
+from users.serializers.generic import ForgetPasswordSerializer
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.tokens import AccessToken
+from users.utils import send_reset_email
 
 
 User = get_user_model()
@@ -71,3 +76,22 @@ class SetUserPasswordView(generics.GenericAPIView):
         return Response(
             {"detail": "Password has been reset."}, status=status.HTTP_200_OK
         )
+
+
+class ForgetPasswordView(APIView):
+    serializer_class = ForgetPasswordSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            email = serializer.data.get("email")
+            user = get_object_or_404(User, email=email)
+            token = AccessToken.for_user(user)
+
+            send_reset_email(email, str(token))
+            return Response(
+                {"detail": "Password reset link has been sent to your email."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
