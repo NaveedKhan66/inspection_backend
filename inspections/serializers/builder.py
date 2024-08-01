@@ -12,6 +12,9 @@ from django.contrib.auth import get_user_model
 from projects.models import Home
 from django.db import transaction
 from django.utils.text import Truncator
+from django.shortcuts import get_object_or_404
+from inspections.utils import send_inspection_report_email
+import threading
 
 User = get_user_model()
 
@@ -214,20 +217,28 @@ class InspectionReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ["home_inspection"]
 
     def create(self, validated_data):
+        request = self.context.get("request")
         inspection = validated_data.pop("inspection")
         home = validated_data.pop("home")
-        home_inspection = HomeInspection.objects.filter(
-            inspection=inspection, home=home
-        ).first()
-        if not home_inspection:
-            raise serializers.ValidationError(
-                {"detail": "This Home inspection doesn't exist"}
-            )
+        home_inspection = get_object_or_404(
+            HomeInspection, inspection=inspection, home=home
+        )
+        home_inspection.is_reviewed = True
+        home_inspection.save()
         validated_data["home_inspection"] = home_inspection
         try:
-            return HomeInspectionReview.objects.get(home_inspection=home_inspection)
+            review = HomeInspectionReview.objects.get(home_inspection=home_inspection)
         except HomeInspectionReview.DoesNotExist:
-            return HomeInspectionReview.objects.create(**validated_data)
+            review = HomeInspectionReview.objects.create(**validated_data)
+
+        # send inspection report in background
+        thread = threading.Thread(
+            target=send_inspection_report_email,
+            kwargs={"request": request, "home_inspection": home_inspection},
+        )
+        thread.start()
+
+        return review
 
 
 class DeficiencyEmailSerializer(serializers.Serializer):
