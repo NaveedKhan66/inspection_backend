@@ -18,6 +18,7 @@ User = get_user_model()
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
+        attrs["email"] = attrs["email"].lower()
         data = super().validate(attrs)
         user_type = self.user.user_type
         # Add custom data

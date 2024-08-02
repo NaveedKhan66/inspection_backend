@@ -33,6 +33,12 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.id} {self.email}"
 
+    def save(self, *args, **kwargs):
+        if self.email:
+            self.email = self.email.lower()
+            self.username = self.email.lower()
+        super().save(*args, **kwargs)
+
 
 class Builder(models.Model):
     id = models.UUIDField(
