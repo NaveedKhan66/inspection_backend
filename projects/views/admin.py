@@ -82,7 +82,7 @@ class HomeViewSet(viewsets.ModelViewSet):
 
             project = get_object_or_404(Project, id=project_id, builder=user)
 
-        queryset = Home.objects.filter(project=project)
+        queryset = Home.objects.filter(project=project).order_by("-updated_at")
         return queryset
 
     def get_serializer_class(self):

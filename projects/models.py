@@ -55,6 +55,8 @@ class Home(models.Model):
     owner_name = models.CharField(max_length=128, null=True, blank=True)
     owner_email = models.EmailField(_("email address"), null=True, blank=True)
     owner_no = models.CharField(max_length=64, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.id} {self.enrollment_no}"
