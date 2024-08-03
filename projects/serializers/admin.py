@@ -200,8 +200,7 @@ class HomeSerializer(serializers.ModelSerializer):
 
         else:
             home, created = Home.objects.filter(
-                Q(enrollment_no=validated_data.get("enrollment_no"))
-                | Q(address=validated_data.get("address"))
+                enrollment_no=validated_data.get("enrollment_no")
             ).update_or_create(defaults=validated_data)
 
             if created:
