@@ -14,6 +14,10 @@ class Command(BaseCommand):
         password = os.getenv("DJANGO_SUPERUSER_PASSWORD")
         username = os.getenv("DJANGO_SUPERUSER_USERNAME")
         email = os.getenv("DJANGO_SUPERUSER_EMAIL")
+        if email:
+            email = email.lower()
+        if username:
+            username = username.lower()
         if not User.objects.filter(email=email, username=username).exists():
             User.objects.create_superuser(
                 username=username, email=email, password=password, user_type="admin"
