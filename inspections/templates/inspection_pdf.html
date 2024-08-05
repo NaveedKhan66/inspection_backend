@@ -69,7 +69,7 @@
         <div>Builder Eye (LOGO)</div>
     </div>
 
-    <h1>Inspection Report</h1>
+    <h1>{{inspection_name}}</h1>
 
     <div class="info-section">
         <div class="builder-info">
@@ -78,18 +78,14 @@
             {% endif %}
             <h3>{{ builder.get_full_name }}</h3>
             <p>{{ builder.email }}</p>
-            <p>{{ builder.address }}</p>
-            <p>{{ builder.postal_code }}</p>
         </div>
         <div class="homeowner-info">
             <h3>{{ home_owner_name }}</h3>
             <p>{{ home_owner_email }}</p>
-            <p>{{ home_owner.address }}</p>
+            <p>{{ home_address }}</p>
             <p>Enrolment No: {{ enrollment_no }}</p>
         </div>
     </div>
-
-    <h2>PRE-DELIVERY INSPECTION</h2>
 
     <div class="deficiencies">
         {% for deficiency in deficiencies %}
@@ -108,13 +104,11 @@
 
     <div class="signatures">
         <div class="signature">
-            {% comment %} <div class="signature-line"></div> {% endcomment %}
             <img src="{{ owner_signature }}" alt="Owner Signature" class="builder-logo">
             <p>Home Owner</p>
             <p>{% now "F j, Y, g:i a" %}</p>
         </div>
         <div class="signature">
-            {% comment %} <div class="signature-line"></div> {% endcomment %}
             <img src="{{ inspector_signature }}" alt="Inspector Signature" class="builder-logo">
             <p>Inspector</p>
             <p>{% now "F j, Y, g:i a" %}</p>

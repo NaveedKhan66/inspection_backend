@@ -318,10 +318,11 @@ class DeficiencyInspectionFilterView(APIView):
                 trade=trade.user, status="complete"
             ).count()
             incomplete_deficiencies = total_deficiencies - complete_deficiencies
-
-            incomplete_deficiencies_pct = (
-                incomplete_deficiencies / total_deficiencies
-            ) * 100
+            incomplete_deficiencies_pct = 0
+            if total_deficiencies > 0:
+                incomplete_deficiencies_pct = (
+                    incomplete_deficiencies / total_deficiencies
+                ) * 100
             response_data.append(
                 {
                     "trade": trade.user.get_full_name(),

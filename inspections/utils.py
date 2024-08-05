@@ -9,19 +9,25 @@ from django.shortcuts import get_object_or_404
 
 def get_inspection_data(home_inspection):
     builder = home_inspection.home.project.builder
-    home_owner_email = home_inspection.home.owner_email
-    home_owner_name = home_inspection.home.owner_name
-    enrollment_no = home_inspection.home.enrollment_no
+    home = home_inspection.home
+    home_owner_email = home.owner_email
+    home_owner_name = home.owner_name
+    enrollment_no = home.enrollment_no
     deficiencies = home_inspection.deficiencies.all()
     inspection_review_object = get_object_or_404(
         HomeInspectionReview, home_inspection=home_inspection
     )
     inspector_signature = inspection_review_object.inspector_signature_image
     owner_signature = inspection_review_object.owner_signature_image
+    inspection_name = inspection_review_object.home_inspection.inspection.name
+    address_list = [home.street_no, home.city, home.postal_code, home.address]
+    home_address = " ".join([a for a in address_list if a])
     context = {
+        "inspection_name": inspection_name,
         "builder": builder,
         "home_owner_email": home_owner_email,
         "home_owner_name": home_owner_name,
+        "home_address": home_address,
         "enrollment_no": enrollment_no,
         "deficiencies": deficiencies,
         "inspector_signature": inspector_signature,

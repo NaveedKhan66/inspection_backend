@@ -16,6 +16,9 @@ from inspections.models import HomeInspection
 from inspections.models import Deficiency
 from users.permissions import IsBuilder
 from users.permissions import IsEmployee
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class ProjectViewset(viewsets.ModelViewSet):
@@ -224,13 +227,25 @@ class HomeDashboard(APIView):
         total_inspections = None
         total_def = None
 
-        if request.user.user_type == "builder" or request.user.user_type == "employee":
-            user = None
-            if request.user.user_type == "builder":
-                user = request.user
-            elif request.user.user_type == "employee":
-                user = request.user.employee.builder.user
+        set_data = False
 
+        user = None
+        if request.user.user_type == "builder":
+            user = request.user
+        elif request.user.user_type == "employee":
+            user = request.user.employee.builder.user
+        elif request.user.user_type == "admin":
+            builder_id = request.GET.get("builder")
+
+            if not builder_id:
+                total_homes = Home.objects.all().count()
+                total_inspections = HomeInspection.objects.all().count()
+                total_def = Deficiency.objects.all().count()
+                set_data = True
+
+            user = get_object_or_404(User, id=builder_id)
+
+        if not set_data:
             total_homes = (
                 Home.objects.select_related("project")
                 .filter(project__builder=user)
@@ -249,10 +264,6 @@ class HomeDashboard(APIView):
                 def_count += inspection.deficiencies.count()
 
             total_def = def_count
-        else:
-            total_homes = Home.objects.all().count()
-            total_inspections = HomeInspection.objects.all().count()
-            total_def = Deficiency.objects.all().count()
 
         response_data = {
             "total_homes": total_homes,
