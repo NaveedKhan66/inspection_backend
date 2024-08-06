@@ -3,6 +3,8 @@ from projects.models import Project
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from projects.models import Home, BluePrint, BluePrintImage
+from django.db.models import Q
+from users.models import Client
 
 User = get_user_model()
 
@@ -35,12 +37,21 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectAssigneeSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ["id", "profile_picture"]
+        fields = ["id", "profile_picture", "role", "first_name", "last_name"]
+
+    def get_role(self, obj):
+        if obj.user_type == "employee":
+            if obj.employee:
+                return obj.employee.role
+        return None
 
 
 class ProjectBuilderSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
         fields = ["id", "first_name", "last_name"]
@@ -60,6 +71,12 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "status",
             "builder",
             "developer_name",
+            "vbn",
+            "city",
+            "province",
+            "postal_code",
+            "address",
+            "logo",
         ]
 
 
@@ -126,8 +143,16 @@ class ProjectAssigneeListSerializer(serializers.ModelSerializer):
         fields = ["assignees"]
 
 
+def validate_enrollment_no(value):
+    if value == None:
+        raise serializers.ValidationError("Enrollment number cannot be empty")
+    return value
+
+
 class HomeSerializer(serializers.ModelSerializer):
     """General Home serializer"""
+
+    enrollment_no = serializers.CharField(validators=[validate_enrollment_no])
 
     class Meta:
         model = Home
@@ -136,9 +161,103 @@ class HomeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         if isinstance(validated_data, list):
-            # Bulk create
-            return Home.objects.bulk_create([Home(**item) for item in validated_data])
-        return super().create(validated_data)
+            # For bulk creation
+            enrollment_nos = [item["enrollment_no"] for item in validated_data]
+            addresses = [
+                item["address"] for item in validated_data if item.get("address")
+            ]
+            existing_homes = Home.objects.filter(
+                Q(enrollment_no__in=enrollment_nos) | Q(address__in=addresses)
+            )
+            existing_homes_dict = {home.enrollment_no: home for home in existing_homes}
+
+            new_homes = []
+            updated_homes = []
+            for item in validated_data:
+                enrollment_no = item["enrollment_no"]
+                if enrollment_no in existing_homes_dict:
+                    home = existing_homes_dict[enrollment_no]
+                    for key, value in item.items():
+                        setattr(home, key, value)
+                    updated_homes.append(home)
+                else:
+                    new_homes.append(Home(**item))
+
+            if new_homes:
+                Home.objects.bulk_create(new_homes)
+
+            if updated_homes:
+                Home.objects.bulk_update(
+                    updated_homes,
+                    fields=[
+                        f.name
+                        for f in Home._meta.fields
+                        if f.name not in ["id", "project"]
+                    ],
+                )
+
+            return new_homes + updated_homes
+
+        else:
+            home, created = Home.objects.filter(
+                enrollment_no=validated_data.get("enrollment_no")
+            ).update_or_create(defaults=validated_data)
+
+            if created:
+                """Handle no_of_homes of project upon creation"""
+                home.project.no_of_homes += 1
+                home.project.save()
+            owner_email = validated_data.get("owner_email")
+            owner_name = validated_data.get("owner_name")
+            owner_no = validated_data.get("owner_no")
+            owner_created = False
+            if owner_email:
+                try:
+                    user = User.objects.get(username=owner_email)
+                except User.DoesNotExist:
+                    owner_created = True
+                    user = User.objects.create(
+                        username=owner_email,
+                        email=owner_email,
+                        first_name=owner_name,
+                        phone_no=owner_no,
+                        user_type="client",
+                    )
+
+                user.set_unusable_password()
+                user.save()
+                if owner_created:
+                    client_profile = Client.objects.create(user=user)
+
+                home.client = user
+                home.save()
+            return home
+
+    def update(self, instance, validated_data):
+        owner_email = validated_data.get("owner_email")
+        owner_name = validated_data.get("owner_name")
+        owner_no = validated_data.get("owner_no")
+        owner_created = False
+        if owner_email:
+            try:
+                user = User.objects.get(username=owner_email)
+            except User.DoesNotExist:
+                owner_created = True
+                user = User.objects.create(
+                    username=owner_email,
+                    email=owner_email,
+                    first_name=owner_name,
+                    phone_no=owner_no,
+                    user_type="client",
+                )
+
+            user.set_unusable_password()
+            user.save()
+            if owner_created:
+                client_profile = Client.objects.create(user=user)
+            instance.client = user
+            instance.save()
+        return super().update(instance, validated_data)
 
 
 class ClientforHomeSerializer(serializers.ModelSerializer):

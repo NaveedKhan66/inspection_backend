@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspection Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .builder-info, .homeowner-info {
+            width: 48%;
+        }
+        .builder-logo {
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            margin-bottom: 10px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .deficiency {
+            margin-bottom: 20px;
+        }
+        .images {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .images img {
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+        }
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+        .signature {
+            width: 45%;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>Date: {% now "F j, Y" %}</div>
+        <div>Builder Eye (LOGO)</div>
+    </div>
+
+    <h1>{{inspection_name}}</h1>
+
+    <div class="info-section">
+        <div class="builder-info">
+            {% if builder.profile_picture %}
+                <img src="{{ builder.profile_picture }}" alt="Builder Logo" class="builder-logo">
+            {% endif %}
+            <h3>{{ builder.get_full_name }}</h3>
+            <p>{{ builder.email }}</p>
+        </div>
+        <div class="homeowner-info">
+            <h3>{{ home_owner_name }}</h3>
+            <p>{{ home_owner_email }}</p>
+            <p>{{ home_address }}</p>
+            <p>Enrolment No: {{ enrollment_no }}</p>
+        </div>
+    </div>
+
+    <div class="deficiencies">
+        {% for deficiency in deficiencies %}
+            <div class="deficiency">
+                <h3>{{ forloop.counter }}.</h3>
+                <p><strong>Location:</strong> {{ deficiency.location }}</p>
+                <p><strong>Description:</strong> {{ deficiency.description }}</p>
+                <div class="images">
+                    {% for image in deficiency.images.all %}
+                        <img src="{{ image.image }}" alt="Deficiency Image">
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="signatures">
+        <div class="signature">
+            <img src="{{ owner_signature }}" alt="Owner Signature" class="builder-logo">
+            <p>Home Owner</p>
+            <p>{% now "F j, Y, g:i a" %}</p>
+        </div>
+        <div class="signature">
+            <img src="{{ inspector_signature }}" alt="Inspector Signature" class="builder-logo">
+            <p>Inspector</p>
+            <p>{% now "F j, Y, g:i a" %}</p>
+        </div>
+    </div>
+</body>
+</html>

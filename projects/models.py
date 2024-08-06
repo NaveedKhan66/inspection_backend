@@ -1,5 +1,6 @@
 from django.db import models
 import uuid
+from django.utils.translation import gettext_lazy as _
 
 
 class Project(models.Model):
@@ -11,7 +12,7 @@ class Project(models.Model):
     vbn = models.CharField(max_length=64, null=True, blank=True)
     province = models.CharField(max_length=128, null=True, blank=True)
     city = models.CharField(max_length=128, null=True, blank=True)
-    postal_code = models.IntegerField(null=True, blank=True)
+    postal_code = models.CharField(max_length=32, null=True, blank=True)
     address = models.CharField(max_length=610, null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS_TYPES, default="active")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -38,7 +39,7 @@ class Home(models.Model):
     city = models.CharField(max_length=64, null=True, blank=True)
     province = models.CharField(max_length=64, null=True, blank=True)
     postal_code = models.CharField(max_length=32, null=True, blank=True)
-    enrollment_no = models.IntegerField(null=True, blank=True)
+    enrollment_no = models.CharField(max_length=128, unique=True)
     warranty_start_date = models.DateField(null=True, blank=True)
     home_type = models.CharField(max_length=64, null=True, blank=True)
     client = models.ForeignKey(
@@ -51,6 +52,11 @@ class Home(models.Model):
     project = models.ForeignKey(
         "projects.Project", on_delete=models.CASCADE, related_name="homes"
     )
+    owner_name = models.CharField(max_length=128, null=True, blank=True)
+    owner_email = models.EmailField(_("email address"), null=True, blank=True)
+    owner_no = models.CharField(max_length=64, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.id} {self.enrollment_no}"

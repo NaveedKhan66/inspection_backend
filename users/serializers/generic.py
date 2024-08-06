@@ -3,12 +3,14 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import AccessToken
-from inspection_backend.settings import EMAIL_HOST
+from inspection_backend.settings import EMAIL_HOST_USER
 from inspection_backend.settings import RESET_PASSOWRD_LINK
 from users.models import Builder
 from users.models import Trade
 from users.models import Client
 from users.models import BuilderEmployee
+from users.models import BlacklistedToken
+from users.utils import send_reset_email
 
 User = get_user_model()
 
@@ -16,6 +18,7 @@ User = get_user_model()
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
+        attrs["email"] = attrs["email"].lower()
         data = super().validate(attrs)
         user_type = self.user.user_type
         # Add custom data
@@ -71,6 +74,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         queryset=User.objects.filter(user_type="builder"), required=False
     )
     role = serializers.CharField(max_length=255, required=False)
+    services = serializers.CharField(max_length=128, required=False)
 
     class Meta:
         model = User
@@ -89,6 +93,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             "profile_picture",
             "builder",
             "role",
+            "services",
         ]
         extra_kwargs = {
             "id": {"read_only": True},
@@ -122,6 +127,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"detail": "Builders can only create Trades"}
             )
+        elif user.user_type == "admin" and validated_data.get("user_type") == "trade":
+            raise serializers.ValidationError({"detail": "Admin cannot create Trades"})
 
         # Builder id is required to create an employee
         if validated_data.get("user_type") == "employee" and not validated_data.get(
@@ -160,7 +167,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
             client = Client.objects.create(user=user)
 
         elif user_type == "trade":
-            trade = Trade.objects.create(user=user, builder=request.user.builder)
+            services = validated_data.get("services")
+            trade = Trade.objects.create(
+                user=user, builder=request.user.builder, services=services
+            )
 
         elif user_type == "employee":
             builder_user = validated_data.get("builder")
@@ -173,26 +183,35 @@ class CreateUserSerializer(serializers.ModelSerializer):
         token = AccessToken.for_user(user)
 
         # Send email with token
-        self.send_reset_email(user.email, str(token))
+        send_reset_email(user.email, str(token))
 
         return user
 
-    def send_reset_email(self, email, token):
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.user_type == "trade":
+            representation["services"] = instance.trade.services
+            representation.pop("builder")
 
-        from django.core.mail import send_mail
+        if instance.user_type == "builder" or instance.user_type == "client":
+            representation.pop("builder")
 
-        link = f"{RESET_PASSOWRD_LINK}?token={token}"
-        send_mail(
-            "Reset your password",
-            f"Click the link to set your password: {link}",
-            EMAIL_HOST,
-            [email],
-            fail_silently=False,
+        if instance.user_type == "employee":
+            representation["role"] = instance.employee.role
+
+        return representation
+
+
+def validate_token_not_blacklisted(value):
+    if BlacklistedToken.objects.filter(token=value).exists():
+        raise serializers.ValidationError(
+            "This token has already been used and is no longer valid."
         )
+    return value
 
 
 class SetPasswordSerializer(serializers.Serializer):
-    token = serializers.CharField()
+    token = serializers.CharField(validators=[validate_token_not_blacklisted])
     password = serializers.CharField()
 
     def validate_token(self, value):
@@ -210,3 +229,9 @@ class SetPasswordSerializer(serializers.Serializer):
         user = self.user
         user.set_password(self.validated_data["password"])
         user.save()
+        # Blacklist the token
+        BlacklistedToken.objects.create(token=self.validated_data["token"])
+
+
+class ForgetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()

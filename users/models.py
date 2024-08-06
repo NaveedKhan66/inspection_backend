@@ -23,8 +23,8 @@ class User(AbstractUser):
     website = models.CharField(max_length=610, null=True, blank=True)
     province = models.CharField(max_length=255, null=True, blank=True)
     city = models.CharField(max_length=255, null=True, blank=True)
-    postal_code = models.IntegerField(null=True, blank=True)
-    phone_no = models.IntegerField(null=True, blank=True)
+    postal_code = models.CharField(max_length=32, null=True, blank=True)
+    phone_no = models.CharField(max_length=64, null=True, blank=True)
 
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
@@ -32,6 +32,12 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.id} {self.email}"
+
+    def save(self, *args, **kwargs):
+        if self.email:
+            self.email = self.email.lower()
+            self.username = self.email.lower()
+        super().save(*args, **kwargs)
 
 
 class Builder(models.Model):
@@ -68,6 +74,7 @@ class Trade(models.Model):
     builder = models.ForeignKey(
         Builder, on_delete=models.CASCADE, related_name="trades"
     )
+    services = models.CharField(max_length=128, null=True, blank=True)
 
     def __str__(self):
         return f"{self.user} {self.builder}"
@@ -80,9 +87,15 @@ class Client(models.Model):
         default=uuid.uuid4, primary_key=True, db_index=True, editable=False
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="client")
+    is_invited = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user}"
 
 
-# TODO: remove profile uuids from the models. There should only be user uuid
+class BlacklistedToken(models.Model):
+    token = models.CharField(max_length=500, unique=True)
+    blacklisted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Blacklisted token {self.token[:10]}..."

@@ -4,11 +4,17 @@ from rest_framework_simplejwt.views import (
 )
 from users.views import admin
 from users.views import generic
+from users.views import builder
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 
 router.register(r"builder", admin.AdminBuilderViewset, basename="admin-builder")
+
+builder_trade_router = DefaultRouter()
+builder_trade_router.register(
+    r"trade", builder.BuilderTradeListView, basename="builder-trade"
+)
 
 urlpatterns = [
     re_path(r"user/admin/", include(router.urls)),
@@ -40,6 +46,11 @@ urlpatterns = [
         name="set-user-password",
     ),
     path(
+        "auth/forget-password/",
+        generic.ForgetPasswordView.as_view(),
+        name="forget-password",
+    ),
+    path(
         "user/admin/builder/<id>/employees/",
         admin.AdminBuilderEmployeeListView.as_view(),
         name="builder-employees-list",
@@ -48,5 +59,20 @@ urlpatterns = [
         "user/admin/employee/<user__id>",
         admin.AdminBuilderEmployeeRetrieveUpdateDeleteView.as_view(),
         name="builder-employees",
+    ),
+    path(
+        "builder/",
+        include(builder_trade_router.urls),
+        name="builder-trade-list-retrieve",
+    ),
+    path(
+        "user/<uuid:pk>/",
+        admin.UserDeleteView.as_view(),
+        name="user-delete",
+    ),
+    path(
+        "builder/owner/invite/",
+        builder.OwnerInviteView.as_view(),
+        name="owner-invite",
     ),
 ]
