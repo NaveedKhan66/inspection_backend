@@ -245,10 +245,12 @@ class ProjectTotalDeficiencies(APIView):
 
 
 class DeficiencyFilterView(APIView):
-    permission_classes = [IsAuthenticated, IsBuilder]
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee]
 
     def get(self, request, *args, **kwargs):
         builder = request.user
+        if request.user.user_type == "employee":
+            builder = request.user.employee.builder.user
 
         inspection = request.query_params.get("inspection")
         trade_name = request.query_params.get("trade")
