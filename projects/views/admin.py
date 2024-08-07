@@ -124,8 +124,9 @@ class HomeViewSet(viewsets.ModelViewSet):
         project = instance.project
         response = super().destroy(request, *args, **kwargs)
         if response.status_code == status.HTTP_204_NO_CONTENT:
-            project.no_of_homes -= 1
-            project.save()
+            if project.no_of_homes > 0:
+                project.no_of_homes -= 1
+                project.save()
         return response
 
 
