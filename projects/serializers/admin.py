@@ -208,7 +208,7 @@ class HomeSerializer(serializers.ModelSerializer):
                 home.project.no_of_homes += 1
                 home.project.save()
             owner_email = validated_data.get("owner_email")
-            owner_name = validated_data.get("owner_name")
+            owner_name = validated_data.get("owner_name", "")
             owner_no = validated_data.get("owner_no")
             owner_created = False
             if owner_email:
