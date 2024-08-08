@@ -10,7 +10,11 @@ from users.models import Trade
 from users.models import Client
 from users.models import BuilderEmployee
 from users.models import BlacklistedToken
-from users.utils import send_reset_email
+from users.utils import (
+    send_reset_email,
+    create_employee_for_builder,
+    set_password_for_employee,
+)
 
 User = get_user_model()
 
@@ -162,6 +166,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
         if user_type == "builder":
             builder = Builder.objects.create(user=user)
+            create_employee_for_builder(user)
 
         elif user_type == "client":
             client = Client.objects.create(user=user)
@@ -229,6 +234,10 @@ class SetPasswordSerializer(serializers.Serializer):
         user = self.user
         user.set_password(self.validated_data["password"])
         user.save()
+
+        if user.user_type == "builder":
+            # change password for the same employee instance as well
+            set_password_for_employee(user, self.validated_data["password"])
         # Blacklist the token
         BlacklistedToken.objects.create(token=self.validated_data["token"])
 
