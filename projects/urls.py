@@ -57,4 +57,9 @@ urlpatterns = [
     path("dashboard/", admin.DashboardAPIView.as_view(), name="dashboard-api"),
     path("home-dashboard/", admin.HomeDashboard.as_view(), name="home-dashboard"),
     path(r"", include(builder_project_router.urls)),
+    path(
+        "project/<uuid:project_id>/homes/csv/",
+        admin.GenerateProjectHomesCSV.as_view(),
+        name="generate_project_homes_csv",
+    ),
 ]

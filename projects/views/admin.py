@@ -17,6 +17,9 @@ from inspections.models import Deficiency
 from users.permissions import IsBuilder
 from users.permissions import IsEmployee
 from django.contrib.auth import get_user_model
+import csv
+from django.http import HttpResponse
+
 
 User = get_user_model()
 
@@ -273,3 +276,53 @@ class HomeDashboard(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class GenerateProjectHomesCSV(APIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+
+    def get(self, request, project_id):
+        homes = Home.objects.filter(project_id=project_id)
+
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = (
+            f'attachment; filename="project_{project_id}_homes.csv"'
+        )
+
+        writer = csv.writer(response)
+        writer.writerow(
+            [
+                "Lot No.",
+                "Unit/Street No.",
+                "Address",
+                "Province",
+                "City",
+                "Postal Code",
+                "Enrolment No.",
+                "Home Type",
+                "Warranty Start Date",
+                "Home Owner",
+                "Home Owner Email",
+                "Home Owner Number",
+            ]
+        )
+
+        for home in homes:
+            writer.writerow(
+                [
+                    home.lot_no,
+                    home.street_no,
+                    home.address,
+                    home.province,
+                    home.city,
+                    home.postal_code,
+                    home.enrollment_no,
+                    home.home_type,
+                    home.warranty_start_date,
+                    home.owner_name,
+                    home.owner_email,
+                    home.owner_no,
+                ]
+            )
+
+        return response

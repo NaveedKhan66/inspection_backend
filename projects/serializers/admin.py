@@ -321,3 +321,22 @@ class BluePrintSerializer(serializers.ModelSerializer):
                 BluePrintImage.objects.create(blue_print=instance, **image_data)
 
         return instance
+
+
+class HomeCsvSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Home
+        fields = [
+            "lot_no",
+            "street_no",
+            "address",
+            "province",
+            "city",
+            "postal_code",
+            "enrollment_no",
+            "home_type",
+            "warranty_start_date",
+            "owner_name",
+            "owner_email",
+            "owner_no",
+        ]
