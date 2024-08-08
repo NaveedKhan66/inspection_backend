@@ -30,7 +30,9 @@ def create_employee_for_builder(instance):
     employee_user.save()
 
     # Create the Employee instance
-    BuilderEmployee.objects.create(user=employee_user, builder=instance, role="builder")
+    BuilderEmployee.objects.create(
+        user=employee_user, builder=instance.builder, role="builder"
+    )
 
 
 def set_password_for_employee(instance, password):
