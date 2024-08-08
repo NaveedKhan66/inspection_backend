@@ -86,14 +86,9 @@ class DeficiencySerializer(serializers.ModelSerializer):
         owner_visibility = validated_data.pop("owner_visibility", False)
         home_inspection = None
 
-        try:
-            home_inspection = HomeInspection.objects.get(
-                home=home, inspection=inspection
-            )
-        except HomeInspection.DoesNotExist:
-            home_inspection = HomeInspection.objects.create(
-                home=home, inspection=inspection, owner_visibility=owner_visibility
-            )
+        home_inspection = HomeInspection.objects.create(
+            home=home, inspection=inspection, owner_visibility=owner_visibility
+        )
 
         validated_data["home_inspection"] = home_inspection
 
