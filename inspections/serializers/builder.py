@@ -212,19 +212,9 @@ class InspectionReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ["home_inspection"]
 
     def create(self, validated_data):
+        review = super().create(validated_data)
         request = self.context.get("request")
-        inspection = validated_data.pop("inspection")
-        home = validated_data.pop("home")
-        home_inspection = get_object_or_404(
-            HomeInspection, inspection=inspection, home=home
-        )
-        home_inspection.is_reviewed = True
-        home_inspection.save()
-        validated_data["home_inspection"] = home_inspection
-        try:
-            review = HomeInspectionReview.objects.get(home_inspection=home_inspection)
-        except HomeInspectionReview.DoesNotExist:
-            review = HomeInspectionReview.objects.create(**validated_data)
+        home_inspection = review.home_inspection
 
         # send inspection report in background
         thread = threading.Thread(
