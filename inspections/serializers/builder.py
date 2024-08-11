@@ -206,7 +206,6 @@ class InspectionReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeInspectionReview
         fields = "__all__"
-        read_only_fields = ["home_inspection"]
 
     def create(self, validated_data):
         review = super().create(validated_data)
