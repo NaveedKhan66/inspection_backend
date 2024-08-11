@@ -203,13 +203,6 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
 
 
 class InspectionReviewSerializer(serializers.ModelSerializer):
-    inspection = serializers.PrimaryKeyRelatedField(
-        queryset=Inspection.objects.all(), write_only=True
-    )
-    home = serializers.PrimaryKeyRelatedField(
-        queryset=Home.objects.all(), write_only=True
-    )
-
     class Meta:
         model = HomeInspectionReview
         fields = "__all__"
