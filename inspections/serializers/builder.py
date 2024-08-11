@@ -43,6 +43,9 @@ class DeficiencySerializer(serializers.ModelSerializer):
         queryset=Inspection.objects.all(), write_only=True
     )
     owner_visibility = serializers.BooleanField(required=False, write_only=True)
+    home_inspection = serializers.PrimaryKeyRelatedField(
+        queryset=HomeInspection.objects.all(), allow_null=True
+    )
 
     class Meta:
         model = Deficiency
@@ -60,7 +63,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
             "home_inspection",
             "owner_visibility",
         ]
-        read_only_fields = ["home_inspection", "created_at", "is_reviewed"]
+        read_only_fields = ["created_at", "is_reviewed"]
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
@@ -84,11 +87,12 @@ class DeficiencySerializer(serializers.ModelSerializer):
         inspection = validated_data.pop("inspection")
         home = validated_data.pop("home")
         owner_visibility = validated_data.pop("owner_visibility", False)
-        home_inspection = None
 
-        home_inspection = HomeInspection.objects.create(
-            home=home, inspection=inspection, owner_visibility=owner_visibility
-        )
+        home_inspection = validated_data.get("home_inspection")
+        if not home_inspection:
+            home_inspection = HomeInspection.objects.create(
+                home=home, inspection=inspection, owner_visibility=owner_visibility
+            )
 
         validated_data["home_inspection"] = home_inspection
 
