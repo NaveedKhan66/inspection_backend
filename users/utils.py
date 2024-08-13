@@ -24,14 +24,18 @@ def create_employee_for_builder(instance):
 
     # Create the Employee user
     employee_user = User.objects.create(
-        username=employee_email, email=employee_email, user_type="employee"
+        username=employee_email,
+        email=employee_email,
+        user_type="employee",
+        first_name=instance.name if instance.name else "",
+        last_name=instance.last_name if instance.last_name else "",
     )
     employee_user.set_unusable_password()
     employee_user.save()
 
     # Create the Employee instance
     BuilderEmployee.objects.create(
-        user=employee_user, builder=instance.builder, role="builder"
+        user=employee_user, builder=instance.builder, role="Builder"
     )
 
 
