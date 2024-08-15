@@ -244,3 +244,10 @@ class SetPasswordSerializer(serializers.Serializer):
 
 class ForgetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "email", "first_name", "last_name", "profile_picture"]
+        read_only_fields = ["id", "email"]

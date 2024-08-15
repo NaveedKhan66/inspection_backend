@@ -75,4 +75,9 @@ urlpatterns = [
         builder.OwnerInviteView.as_view(),
         name="owner-invite",
     ),
+    path(
+        "user/profile/",
+        generic.UserProfileUpdateRetrieveView.as_view(),
+        name="user-profile",
+    ),
 ]

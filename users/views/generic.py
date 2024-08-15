@@ -7,6 +7,7 @@ from users.serializers.generic import UpdateUserDetailSerializer
 from users.serializers.generic import CreateUserSerializer
 from users.serializers.generic import SetPasswordSerializer
 from users.serializers.generic import ForgetPasswordSerializer
+from users.serializers.generic import UserProfileSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
@@ -95,3 +96,11 @@ class ForgetPasswordView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserProfileUpdateRetrieveView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
