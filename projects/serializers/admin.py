@@ -212,6 +212,7 @@ class HomeSerializer(serializers.ModelSerializer):
             owner_no = validated_data.get("owner_no")
             owner_created = False
             if owner_email:
+                owner_email = owner_email.lower()
                 try:
                     user = User.objects.get(username=owner_email)
                 except User.DoesNotExist:
