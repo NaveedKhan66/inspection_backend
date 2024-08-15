@@ -22,6 +22,7 @@ class HomeInspection(models.Model):
     created_at = models.DateField(auto_now_add=True)
     is_reviewed = models.BooleanField(default=False)
     owner_visibility = models.BooleanField(default=False)
+    inspector = models.CharField(max_length=128, null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.id} {self.inspection.name}"

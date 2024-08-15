@@ -203,12 +203,17 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
 
 
 class InspectionReviewSerializer(serializers.ModelSerializer):
+    inspector = serializers.CharField(max_length=128, required=False)
+
     class Meta:
         model = HomeInspectionReview
         fields = "__all__"
 
     def create(self, validated_data):
+        inspector = validated_data.pop("inspector_name", "")
         review = super().create(validated_data)
+        review.home_inspection.inspector = inspector
+        review.home_inspection.inspector.save()
         request = self.context.get("request")
         home_inspection = review.home_inspection
 
