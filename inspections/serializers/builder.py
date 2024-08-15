@@ -213,7 +213,7 @@ class InspectionReviewSerializer(serializers.ModelSerializer):
         inspector = validated_data.pop("inspector_name", "")
         review = super().create(validated_data)
         review.home_inspection.inspector = inspector
-        review.home_inspection.inspector.save()
+        review.home_inspection.save()
         request = self.context.get("request")
         home_inspection = review.home_inspection
 
