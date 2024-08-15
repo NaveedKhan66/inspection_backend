@@ -203,7 +203,7 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
 
 
 class InspectionReviewSerializer(serializers.ModelSerializer):
-    inspector = serializers.CharField(max_length=128, required=False)
+    inspector_name = serializers.CharField(max_length=128, required=False)
 
     class Meta:
         model = HomeInspectionReview
