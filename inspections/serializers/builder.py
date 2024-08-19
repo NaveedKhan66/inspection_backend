@@ -67,7 +67,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
-
+        user = self.context["request"].user
         # trade validations
         trade = validated_data.get("trade")
         if trade:
@@ -75,7 +75,11 @@ class DeficiencySerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {"detail": "Deficiency can only be assigned to a trade."}
                 )
-            if trade.trade.builder.user != self.context["request"].user:
+
+            if user.user_type == "employee":
+                user = user.employee.builder.user
+
+            if trade.trade.builder.user != user:
                 raise serializers.ValidationError(
                     {"detail": "Trade belongs to another builder."}
                 )
