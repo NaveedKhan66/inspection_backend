@@ -27,7 +27,7 @@ def create_employee_for_builder(instance):
         username=employee_email,
         email=employee_email,
         user_type="employee",
-        first_name=instance.name if instance.name else "",
+        first_name=instance.first_name if instance.first_name else "",
         last_name=instance.last_name if instance.last_name else "",
     )
     employee_user.set_unusable_password()
