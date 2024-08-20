@@ -255,7 +255,10 @@ class HomeInspectionListSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         inspection = instance.inspection
         representation["inspection"] = {"id": inspection.id, "name": inspection.name}
-        home_owner = instance.home.client
+        home_owner = {
+            "id": instance.home.client,
+            "name": instance.home.client.get_full_name(),
+        }
         if home_owner:
             representation["owner"] = home_owner.get_full_name()
         return representation
