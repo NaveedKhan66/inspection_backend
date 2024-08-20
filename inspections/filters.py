@@ -7,8 +7,8 @@ class DeficiencyFilter(django_filters.FilterSet):
         field_name="home_inspection__inspection__id"
     )
     home_id = django_filters.UUIDFilter(field_name="home_inspection__home__id")
-    home_inspection_id = django_filters.UUIDFilter(field_name="home_inspection__id")
+    home_inspection_id = django_filters.NumberFilter(field_name="home_inspection__id")
 
     class Meta:
         model = Deficiency
-        fields = ["inspection_id", "home_id", "status"]
+        fields = ["inspection_id", "home_id", "status", "home_inspection_id"]
