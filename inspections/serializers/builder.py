@@ -255,6 +255,11 @@ class HomeInspectionListSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         inspection = instance.inspection
         representation["inspection"] = {"id": inspection.id, "name": inspection.name}
+
+        if hasattr(instance, "review") and instance.review:
+            representation["designate"] = instance.review.designate
+        else:
+            representation["designate"] = False
         home_owner = instance.home.client
         if home_owner:
 
