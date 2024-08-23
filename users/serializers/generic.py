@@ -15,6 +15,7 @@ from users.utils import (
     create_employee_for_builder,
     set_password_for_employee,
 )
+from django.db import transaction
 
 User = get_user_model()
 
@@ -143,6 +144,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             )
         return validated_data
 
+    @transaction.atomic()
     def create(self, validated_data):
         user = User.objects.create(
             username=validated_data["email"],

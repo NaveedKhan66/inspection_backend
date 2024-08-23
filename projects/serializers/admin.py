@@ -45,7 +45,7 @@ class ProjectAssigneeSerializer(serializers.ModelSerializer):
 
     def get_role(self, obj):
         if obj.user_type == "employee":
-            if obj.employee:
+            if hasattr(obj, "employee") and obj.employee:
                 return obj.employee.role
         return None
 
