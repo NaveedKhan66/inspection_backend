@@ -193,6 +193,8 @@ class DashboardAPIView(APIView):
                 {
                     "id": employee.user.id,
                     "profile_picture": employee.user.profile_picture,
+                    "first_name": employee.user.first_name,
+                    "last_name": employee.user.last_name,
                 }
                 for employee in user.builder.employees.all()
             ]
