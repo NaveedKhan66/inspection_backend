@@ -55,13 +55,13 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsBuilder | IsTrade | IsEmployee]
     filter_backends = [DjangoFilterBackend]
     filterset_class = DeficiencyFilter
-    ordering_fields = ["created_at"]
-    ordering = ["-created_at"]
+    ordering_fields = ["id"]
+    ordering = ["-id"]
 
     # TODO: add permission for admin to list deficiencies.
     def filter_queryset(self, queryset):
         queryset = super(DeficiencyViewSet, self).filter_queryset(queryset)
-        return queryset.order_by("-created_at")
+        return queryset.order_by("-id")
 
     def get_queryset(self):
         user = self.request.user
