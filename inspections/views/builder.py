@@ -59,6 +59,10 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
     ordering = ["-created_at"]
 
     # TODO: add permission for admin to list deficiencies.
+    def filter_queryset(self, queryset):
+        queryset = super(DeficiencyViewSet, self).filter_queryset(queryset)
+        return queryset.order_by("-created_at")
+
     def get_queryset(self):
         user = self.request.user
         if user.user_type == "builder" or user.user_type == "employee":
@@ -145,14 +149,15 @@ class SendDeficiencyEmailView(APIView):
             deficiency_ids = serializer.validated_data["deficiency_ids"]
             deficiencies = Deficiency.objects.filter(id__in=deficiency_ids)
 
-            # Render the email template with context
-            email_content = render_to_string(
-                "deficiency_email.html", {"deficiencies": deficiencies}
-            )
             inspection_name = "Deficiency Report"
-
             if deficiencies.exists():
                 inspection_name = deficiencies.first().home_inspection.inspection.name
+
+            # Render the email template with context
+            email_content = render_to_string(
+                "deficiency_email.html",
+                {"deficiencies": deficiencies, "inspection_name": inspection_name},
+            )
 
             msg = EmailMultiAlternatives(inspection_name, "", EMAIL_HOST_USER, [email])
             msg.attach_alternative(email_content, "text/html")
