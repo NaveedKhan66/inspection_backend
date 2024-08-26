@@ -267,9 +267,28 @@ class ClientforHomeSerializer(serializers.ModelSerializer):
         fields = ["id", "first_name", "last_name", "email", "phone_no"]
 
 
-class HomeListRetrieveSerializer(serializers.ModelSerializer):
+class HomeListSerializer(serializers.ModelSerializer):
     """
-    Home serializer for list and retrieve which contains
+    Home serializer for list which contains
+    additional attribute for client
+    """
+
+    client = ClientforHomeSerializer()
+
+    class Meta:
+        model = Home
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.street_no:
+            representation["address"] = instance.street_no + " " + instance.address
+        return representation
+
+
+class HomeRetrieveSerializer(serializers.ModelSerializer):
+    """
+    Home serializer for retrieve which contains
     additional attribute for client
     """
 

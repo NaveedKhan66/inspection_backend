@@ -55,6 +55,8 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsBuilder | IsTrade | IsEmployee]
     filter_backends = [DjangoFilterBackend]
     filterset_class = DeficiencyFilter
+    ordering_fields = ["created_at"]
+    ordering = ["-created_at"]
 
     # TODO: add permission for admin to list deficiencies.
     def get_queryset(self):
@@ -143,20 +145,16 @@ class SendDeficiencyEmailView(APIView):
             deficiency_ids = serializer.validated_data["deficiency_ids"]
             deficiencies = Deficiency.objects.filter(id__in=deficiency_ids)
 
-            # Calculate outstanding days for each deficiency
-            for deficiency in deficiencies:
-                deficiency.outstanding_days = (
-                    date.today() - deficiency.created_at
-                ).days
-
             # Render the email template with context
             email_content = render_to_string(
                 "deficiency_email.html", {"deficiencies": deficiencies}
             )
+            inspection_name = "Deficiency Report"
 
-            msg = EmailMultiAlternatives(
-                "Deficiency Report", "", EMAIL_HOST_USER, [email]
-            )
+            if deficiencies.exists():
+                inspection_name = deficiencies.first().home_inspection.inspection.name
+
+            msg = EmailMultiAlternatives(inspection_name, "", EMAIL_HOST_USER, [email])
             msg.attach_alternative(email_content, "text/html")
             msg.send()
 

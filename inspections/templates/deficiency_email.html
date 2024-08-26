@@ -13,6 +13,7 @@
         th, td {
             padding: 8px;
             text-align: left;
+            vertical-align: top;
         }
         .status-complete {
             color: green;
@@ -21,7 +22,11 @@
             color: red;
         }
         .status-pending-approval {
-            color: yellow;
+            color: orange;
+        }
+        .description {
+            word-wrap: break-word;
+            max-width: 300px;
         }
     </style>
 </head>
@@ -34,8 +39,7 @@
                 <th>Location</th>
                 <th>Status</th>
                 <th>Inspection</th>
-                <th>Created At</th>
-                <th>Outstanding Days</th>
+                <th>Description</th>
             </tr>
         </thead>
         <tbody>
@@ -43,12 +47,11 @@
                 <tr>
                     <td>{{ deficiency.id }}</td>
                     <td>{{ deficiency.location }}</td>
-                   <td class="{% if deficiency.status == 'complete' %}status-complete{% elif deficiency.status == 'incomplete' %}status-incomplete{% elif deficiency.status == 'pending_approval' %}status-pending-approval{% endif %}">
+                    <td class="{% if deficiency.status == 'complete' %}status-complete{% elif deficiency.status == 'incomplete' %}status-incomplete{% elif deficiency.status == 'pending_approval' %}status-pending-approval{% endif %}">
                         {{ deficiency.get_status_display }}
                     </td>
                     <td>{{ deficiency.home_inspection.inspection.name }}</td>
-                    <td>{{ deficiency.created_at }}</td>
-                    <td>{{ deficiency.outstanding_days }}</td>
+                    <td class="description">{{ deficiency.description }}</td>
                 </tr>
             {% endfor %}
         </tbody>

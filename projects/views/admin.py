@@ -92,11 +92,19 @@ class HomeViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
+        """
+        List: HomeListSerializer
+        Retrieve: HomeRetrieveSerializer
+        All else: HomeSerializer
+        """
+        serializer_class = HomeSerializer
 
         if self.request.method == "GET":
-            return HomeListRetrieveSerializer
+            serializer_class = HomeRetrieveSerializer
+            if not self.kwargs.get("pk"):
+                serializer_class = HomeListSerializer
 
-        return HomeSerializer
+        return serializer_class
 
     def perform_create(self, serializer):
         project_id = self.kwargs.get("project_id")
