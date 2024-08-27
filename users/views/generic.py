@@ -85,7 +85,7 @@ class ForgetPasswordView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            email = serializer.data.get("email")
+            email = serializer.data.get("email", "").lower()
             user = get_object_or_404(User, email=email)
             token = AccessToken.for_user(user)
 
