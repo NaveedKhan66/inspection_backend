@@ -148,7 +148,8 @@ class SendDeficiencyEmailView(APIView):
             email = serializer.validated_data["email"]
             deficiency_ids = serializer.validated_data["deficiency_ids"]
             deficiencies = Deficiency.objects.filter(id__in=deficiency_ids)
-
+            user = self.request.user
+            username = user.first_name + " " + user.last_name
             inspection_name = "Deficiency Report"
             if deficiencies.exists():
                 inspection_name = deficiencies.first().home_inspection.inspection.name
@@ -156,7 +157,11 @@ class SendDeficiencyEmailView(APIView):
             # Render the email template with context
             email_content = render_to_string(
                 "deficiency_email.html",
-                {"deficiencies": deficiencies, "inspection_name": inspection_name},
+                {
+                    "deficiencies": deficiencies,
+                    "inspection_name": inspection_name,
+                    "username": username,
+                },
             )
 
             msg = EmailMultiAlternatives(inspection_name, "", EMAIL_HOST_USER, [email])
