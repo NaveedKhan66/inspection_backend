@@ -78,4 +78,19 @@ urlpatterns = [
         builder.DeficienciesFilterOptionsView.as_view(),
         name="deficiency-filter-options",
     ),
+    path(
+        "deficiencies/notifications/",
+        builder.DeficiencyNotificationListView.as_view(),
+        name="deficiency-notifications",
+    ),
+    path(
+        "deficiencies/notifications-read/<int:pk>/",
+        builder.DeficiencyNotificationReadView.as_view(),
+        name="deficiency-notifications-read",
+    ),
+    path(
+        "deficiencies/notifications-all-read/",
+        builder.DeficiencyNotificationAllReadView.as_view(),
+        name="deficiency-notifications-all-read",
+    ),
 ]
