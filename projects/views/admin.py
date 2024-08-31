@@ -19,6 +19,8 @@ from users.permissions import IsEmployee
 from django.contrib.auth import get_user_model
 import csv
 from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
+from projects.filters import HomeFilter
 
 
 User = get_user_model()
@@ -71,6 +73,8 @@ class HomeViewSet(viewsets.ModelViewSet):
 
     serializer_class = HomeSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnlyForBuilder]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = HomeFilter
 
     def get_queryset(self):
         user = self.request.user
