@@ -87,6 +87,22 @@ class DeficiencyUpdateLog(models.Model):
         return f"Update on Deficiency {self.deficiency.id} by {self.actor_name}"
 
 
+class DeficiencyNotification(models.Model):
+    deficiency = models.ForeignKey(
+        Deficiency, on_delete=models.CASCADE, related_name="notifications"
+    )
+    actor_name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField()
+    user = models.ForeignKey(
+        "users.User", on_delete=models.CASCADE, related_name="deficiency_notifications"
+    )
+    read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Notification for Deficiency {self.deficiency.id} by {self.actor_name}"
+
+
 class HomeInspectionReview(models.Model):
     home_inspection = models.OneToOneField(
         "inspections.HomeInspection", on_delete=models.CASCADE, related_name="review"

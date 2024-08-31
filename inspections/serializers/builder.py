@@ -4,7 +4,7 @@ from inspections.models import (
     DefImage,
     HomeInspectionReview,
     HomeInspection,
-    DeficiencyUpdateLog,
+    DeficiencyNotification,
 )
 from rest_framework import serializers
 from datetime import date
@@ -12,9 +12,12 @@ from django.contrib.auth import get_user_model
 from projects.models import Home
 from django.db import transaction
 from django.utils.text import Truncator
-from django.shortcuts import get_object_or_404
 from inspections.utils import send_inspection_report_email
 import threading
+from django.db.models import Q
+from inspections.utils import get_notification_users
+from inspections.utils import DeficiencyUpdateLogsCreationThread
+from inspections.utils import DeficiencyNotificationsCreationThread
 
 User = get_user_model()
 
@@ -110,6 +113,9 @@ class DeficiencySerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         actor = request.user if request else None
 
+        # populate users to which the notification will be sent
+        builder_user, notification_users = get_notification_users(request.user)
+
         # Track changes
         changes = []
 
@@ -164,13 +170,13 @@ class DeficiencySerializer(serializers.ModelSerializer):
         for image_data in images_data:
             DefImage.objects.create(deficiency=instance, **image_data)
 
-        # Create update logs for all changes
-        for change in changes:
-            DeficiencyUpdateLog.objects.create(
-                deficiency=instance,
-                actor_name=actor.get_full_name() if actor else "System",
-                description=change,
+        if changes:
+            logs_thread = DeficiencyUpdateLogsCreationThread(changes, instance, actor)
+            notifications_thread = DeficiencyNotificationsCreationThread(
+                changes, instance, actor, notification_users, builder_user
             )
+            logs_thread.start()
+            notifications_thread.start()
 
         return instance
 
@@ -268,3 +274,21 @@ class HomeInspectionListSerializer(serializers.ModelSerializer):
                 "name": home_owner.get_full_name(),
             }
         return representation
+
+
+class DeficiencyNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeficiencyNotification
+        fields = "__all__"
+
+
+class DeficiencyNotificationReadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeficiencyNotification
+        fields = ["read"]
+        read_only_fields = ["read"]
+
+    def update(self, instance, validated_data):
+        instance.read = True
+        instance.save()
+        return instance

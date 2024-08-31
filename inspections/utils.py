@@ -5,6 +5,12 @@ from io import BytesIO
 from inspections.models import HomeInspectionReview
 from inspection_backend.settings import EMAIL_HOST_USER
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+from inspections.models import DeficiencyUpdateLog
+from inspections.models import DeficiencyNotification
+import threading
+
+User = get_user_model()
 
 
 def get_inspection_data(home_inspection):
@@ -60,3 +66,101 @@ def send_inspection_report_email(request, home_inspection):
     email.attach("inspection_report.pdf", pdf_file.getvalue(), "application/pdf")
 
     return email.send()
+
+
+def get_notification_users(user):
+    """populate users to which the notification will be sent"""
+
+    builder_user = None
+    notification_users = None
+    if user.user_type == "builder":
+        notification_users = User.objects.filter(employee__builder__user=user)
+    elif user.user_type == "trade":
+        builder_user = user.trade.builder.user
+        notification_users = User.objects.filter(employee__builder__user=builder_user)
+    elif user.user_type == "employee":
+        builder_user = user.employee.builder.user
+        notification_users = User.objects.filter(employee__builder__user=builder_user)
+
+    return builder_user, notification_users
+
+
+def bulk_create_deficiency_update_logs(changes, instance, actor):
+    """used upon deficiency update"""
+
+    logs_to_create = [
+        DeficiencyUpdateLog(
+            deficiency=instance,
+            actor_name=actor.get_full_name() if actor else "System",
+            description=change,
+        )
+        for change in changes
+    ]
+    DeficiencyUpdateLog.objects.bulk_create(logs_to_create)
+
+
+def bulk_create_deficiency_notifications(
+    changes, instance, actor, notification_users, builder_user
+):
+    """used upon deficiency update"""
+
+    for change in changes:
+        notifications = [
+            DeficiencyNotification(
+                deficiency=instance,
+                user=user,
+                actor_name=actor.get_full_name() if actor else "System",
+                description=change,
+            )
+            for user in notification_users
+        ]
+
+    DeficiencyNotification.objects.bulk_create(notifications)
+    if builder_user:
+        for change in changes:
+            DeficiencyNotification.objects.create(
+                deficiency=instance,
+                user=builder_user,
+                actor_name=actor.get_full_name() if actor else "System",
+                description=change,
+            )
+    if actor.user_type == "builder":
+        for change in changes:
+            DeficiencyNotification.objects.create(
+                deficiency=instance,
+                user=instance.trade,
+                actor_name=actor.get_full_name() if actor else "System",
+                description=change,
+            )
+
+
+class DeficiencyUpdateLogsCreationThread(threading.Thread):
+
+    def __init__(self, changes, instance, actor):
+        threading.Thread.__init__(self)
+        self.changes = changes
+        self.instance = instance
+        self.actor = actor
+
+    def run(self):
+        bulk_create_deficiency_update_logs(self.changes, self.instance, self.actor)
+
+
+class DeficiencyNotificationsCreationThread(threading.Thread):
+
+    def __init__(self, changes, instance, actor, notification_users, builder_user):
+        threading.Thread.__init__(self)
+        self.changes = changes
+        self.instance = instance
+        self.actor = actor
+        self.notification_users = notification_users
+        self.builder_user = builder_user
+
+    def run(self):
+        bulk_create_deficiency_notifications(
+            self.changes,
+            self.instance,
+            self.actor,
+            self.notification_users,
+            self.builder_user,
+        )

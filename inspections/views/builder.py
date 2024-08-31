@@ -4,6 +4,7 @@ from inspections.models import (
     DefImage,
     HomeInspectionReview,
     HomeInspection,
+    DeficiencyNotification,
 )
 from rest_framework import viewsets, generics
 from users.permissions import IsBuilder
@@ -380,3 +381,29 @@ class DeficienciesFilterOptionsView(APIView):
                 "locations": list(locations),
             }
         )
+
+
+class DeficiencyNotificationListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee | IsTrade]
+    queryset = DeficiencyNotification.objects.filter(read=False)
+    serializer_class = builder.DeficiencyNotificationSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(user=self.request.user)
+
+
+class DeficiencyNotificationReadView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee | IsTrade]
+    queryset = DeficiencyNotification.objects.all()
+    serializer_class = builder.DeficiencyNotificationReadSerializer
+
+
+class DeficiencyNotificationAllReadView(APIView):
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee | IsTrade]
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+        notifications = DeficiencyNotification.objects.filter(user=user)
+        notifications.update(read=True)
+        return Response(status=status.HTTP_200_OK)
