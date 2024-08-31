@@ -28,10 +28,18 @@
             word-wrap: break-word;
             max-width: 300px;
         }
+        .report-info {
+            text-align: right;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-    <h2>{{inspection_name}}</h2>
+    <div class="report-info">
+        Date/Time: {% now "Y-m-d H:i:s" %}<br>
+        User: {{ username }}
+    </div>
+    <h2>{{inspection_name}} Report</h2>
     <table>
         <thead>
             <tr>
