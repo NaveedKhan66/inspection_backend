@@ -148,6 +148,7 @@ class SendDeficiencyEmailView(APIView):
         if serializer.is_valid():
             email = serializer.validated_data["email"]
             deficiency_ids = serializer.validated_data["deficiency_ids"]
+            due_date = str(serializer.validated_data["due_date"])
             deficiencies = Deficiency.objects.filter(id__in=deficiency_ids)
             user = self.request.user
             username = user.first_name + " " + user.last_name
@@ -162,10 +163,13 @@ class SendDeficiencyEmailView(APIView):
                     "deficiencies": deficiencies,
                     "inspection_name": inspection_name,
                     "username": username,
+                    "due_date": due_date,
                 },
             )
 
-            msg = EmailMultiAlternatives(inspection_name, "", EMAIL_HOST_USER, [email])
+            msg = EmailMultiAlternatives(
+                due_date + " - " + inspection_name, "", EMAIL_HOST_USER, [email]
+            )
             msg.attach_alternative(email_content, "text/html")
             msg.send()
 

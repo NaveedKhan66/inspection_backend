@@ -242,6 +242,7 @@ class DeficiencyEmailSerializer(serializers.Serializer):
     deficiency_ids = serializers.ListField(
         child=serializers.IntegerField(), allow_empty=False
     )
+    due_date = serializers.DateField()
 
     def validate_deficiency_ids(self, value):
         # Check if all IDs correspond to existing Deficiency objects
