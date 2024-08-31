@@ -341,3 +341,42 @@ class DeficiencyInspectionFilterView(APIView):
             )
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class DeficienciesFilterOptionsView(APIView):
+    """
+    Get filter options based on status, trades and locations.
+    These filters will be used to filter deficiencies
+    """
+
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee]
+
+    def get(self, request, *args, **kwargs):
+        builder = None
+        if self.request.user.user_type == "builder":
+            builder = self.request.user
+        elif self.request.user.user_type == "employee":
+            builder = self.request.user.employee.builder.user
+        trades = User.objects.filter(trade__builder=builder.builder)
+        trade_values = trades.distinct().values("id", "first_name", "last_name")
+
+        # Get status types
+        status_types = [
+            {"value": status[0], "label": status[1]}
+            for status in Deficiency.STATUS_TYPES
+        ]
+
+        # Get unique locations
+        locations = (
+            Deficiency.objects.exclude(trade__in=trades, location__isnull=True)
+            .values_list("location", flat=True)
+            .distinct()
+        )
+
+        return Response(
+            {
+                "trades": list(trade_values),
+                "status_types": status_types,
+                "locations": list(locations),
+            }
+        )

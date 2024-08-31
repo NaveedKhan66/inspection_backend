@@ -73,4 +73,9 @@ urlpatterns = [
         trade.DeficiencyUpdateLogListView.as_view(),
         name="deficiency-update-logs",
     ),
+    path(
+        "deficiencies/filter-options/",
+        builder.DeficienciesFilterOptionsView.as_view(),
+        name="deficiency-filter-options",
+    ),
 ]
