@@ -49,6 +49,8 @@ class DeficiencySerializer(serializers.ModelSerializer):
     home_inspection = serializers.PrimaryKeyRelatedField(
         queryset=HomeInspection.objects.all(), allow_null=True
     )
+    next = serializers.SerializerMethodField()
+    previous = serializers.SerializerMethodField()
 
     class Meta:
         model = Deficiency
@@ -65,6 +67,8 @@ class DeficiencySerializer(serializers.ModelSerializer):
             "inspection",
             "home_inspection",
             "owner_visibility",
+            "next",
+            "previous",
         ]
         read_only_fields = ["created_at", "is_reviewed"]
 
@@ -179,6 +183,18 @@ class DeficiencySerializer(serializers.ModelSerializer):
             notifications_thread.start()
 
         return instance
+
+    def get_next(self, obj):
+        try:
+            return Deficiency.objects.filter(id__gt=obj.id).order_by("id").first().id
+        except AttributeError:
+            return None
+
+    def get_previous(self, obj):
+        try:
+            return Deficiency.objects.filter(id__lt=obj.id).order_by("-id").first().id
+        except AttributeError:
+            return None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
