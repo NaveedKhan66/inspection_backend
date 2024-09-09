@@ -378,25 +378,32 @@ class DeficienciesFilterOptionsView(APIView):
 
     def get(self, request, *args, **kwargs):
         builder = None
-        if self.request.user.user_type == "builder":
-            builder = self.request.user
-        elif self.request.user.user_type == "employee":
-            builder = self.request.user.employee.builder.user
-        trades = User.objects.filter(trade__builder=builder.builder)
-        trade_values = trades.distinct().values("id", "first_name", "last_name")
+        locations = None
+        trades = None
+        if self.request.user.user_type != "trade":
+            if self.request.user.user_type == "builder":
+                builder = self.request.user
+            elif self.request.user.user_type == "employee":
+                builder = self.request.user.employee.builder.user
+            trades = User.objects.filter(trade__builder=builder.builder)
+            trade_values = trades.distinct().values("id", "first_name", "last_name")
 
+            # Get unique locations
+            locations = (
+                Deficiency.objects.exclude(trade__in=trades, location__isnull=True)
+                .values_list("location", flat=True)
+                .distinct()
+            )
+        locations = (
+            Deficiency.objects.filter(trade=self.request.user, location__isnull=False)
+            .values_list("location", flat=True)
+            .distinct()
+        )
         # Get status types
         status_types = [
             {"value": status[0], "label": status[1]}
             for status in Deficiency.STATUS_TYPES
         ]
-
-        # Get unique locations
-        locations = (
-            Deficiency.objects.exclude(trade__in=trades, location__isnull=True)
-            .values_list("location", flat=True)
-            .distinct()
-        )
 
         return Response(
             {
