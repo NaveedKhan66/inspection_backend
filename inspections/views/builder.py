@@ -396,11 +396,14 @@ class DeficienciesFilterOptionsView(APIView):
                 .values_list("location", flat=True)
                 .distinct()
             )
-        locations = (
-            Deficiency.objects.filter(trade=self.request.user, location__isnull=False)
-            .values_list("location", flat=True)
-            .distinct()
-        )
+        if self.request.user.user_type == "trade":
+            locations = (
+                Deficiency.objects.filter(
+                    trade=self.request.user, location__isnull=False
+                )
+                .values_list("location", flat=True)
+                .distinct()
+            )
         # Get status types
         status_types = [
             {"value": status[0], "label": status[1]}
