@@ -380,6 +380,7 @@ class DeficienciesFilterOptionsView(APIView):
         builder = None
         locations = None
         trades = None
+        trade_values = None
         if self.request.user.user_type != "trade":
             if self.request.user.user_type == "builder":
                 builder = self.request.user
