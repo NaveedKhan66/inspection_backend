@@ -28,6 +28,7 @@ from projects.models import Project
 from users.models import Trade
 from users.permissions import IsTrade
 from users.permissions import IsEmployee
+from django.http import Http404
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -64,6 +65,11 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
         queryset = super(DeficiencyViewSet, self).filter_queryset(queryset)
         return queryset.order_by("-id")
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["view"] = self
+        return context
+
     def get_queryset(self):
         user = self.request.user
         if user.user_type == "builder" or user.user_type == "employee":
@@ -85,6 +91,20 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
                 serializer_class = builder.DeficiencyListSerializer
 
         return serializer_class
+
+    def retrieve(self, request, *args, **kwargs):
+        # Apply filters even in retrieve
+        queryset = self.filter_queryset(self.get_queryset())
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+
+        try:
+            instance = queryset.get(**filter_kwargs)
+        except Deficiency.DoesNotExist:
+            raise Http404
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -354,7 +374,7 @@ class DeficienciesFilterOptionsView(APIView):
     These filters will be used to filter deficiencies
     """
 
-    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee]
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee | IsTrade]
 
     def get(self, request, *args, **kwargs):
         builder = None

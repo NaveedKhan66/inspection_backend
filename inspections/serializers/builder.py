@@ -184,44 +184,30 @@ class DeficiencySerializer(serializers.ModelSerializer):
 
         return instance
 
+    def get_filtered_queryset(self):
+        request = self.context.get("request")
+        view = self.context.get("view")
+        queryset = view.get_queryset() if view else None
+
+        if queryset is not None and request is not None:
+            return view.filter_queryset(queryset)
+        return None
+
     def get_next(self, obj):
-        """
-        Evaluting queryset again to get next and previous properly
-        so that trade and client deficiencies don't collide with each other
-        """
+        qs = self.get_filtered_queryset()
+        if qs is None:
+            return None
         try:
-            user = self.context["request"].user
-            qs = None
-            if user.user_type == "builder" or user.user_type == "employee":
-
-                if user.user_type == "employee":
-                    user = user.employee.builder.user
-
-                qs = Deficiency.objects.filter(
-                    home_inspection__inspection__builder=user
-                )
-            elif user.user_type == "trade":
-                qs = Deficiency.objects.filter(trade=user)
-
             return qs.filter(id__gt=obj.id).order_by("id").first().id
         except AttributeError:
             return None
 
     def get_previous(self, obj):
+        qs = self.get_filtered_queryset()
+        if qs is None:
+            return None
+
         try:
-            user = self.context["request"].user
-            qs = None
-            if user.user_type == "builder" or user.user_type == "employee":
-
-                if user.user_type == "employee":
-                    user = user.employee.builder.user
-
-                qs = Deficiency.objects.filter(
-                    home_inspection__inspection__builder=user
-                )
-            elif user.user_type == "trade":
-                qs = Deficiency.objects.filter(trade=user)
-
             return qs.filter(id__lt=obj.id).order_by("-id").first().id
         except AttributeError:
             return None
