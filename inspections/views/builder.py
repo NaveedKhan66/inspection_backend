@@ -388,6 +388,7 @@ class DeficienciesFilterOptionsView(APIView):
                 builder = self.request.user.employee.builder.user
             trades = User.objects.filter(trade__builder=builder.builder)
             trade_values = trades.distinct().values("id", "first_name", "last_name")
+            trade_values = list(trade_values) if trade_values else []
 
             # Get unique locations
             locations = (
@@ -408,7 +409,7 @@ class DeficienciesFilterOptionsView(APIView):
 
         return Response(
             {
-                "trades": list(trade_values),
+                "trades": trade_values,
                 "status_types": status_types,
                 "locations": list(locations),
             }
