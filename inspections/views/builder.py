@@ -420,8 +420,10 @@ class DeficienciesFilterOptionsView(APIView):
 
 
 class DeficiencyNotificationListView(generics.ListAPIView):
+    """View to display all notifications for a user"""
+
     permission_classes = [IsAuthenticated, IsBuilder | IsEmployee | IsTrade]
-    queryset = DeficiencyNotification.objects.filter(read=False)
+    queryset = DeficiencyNotification.objects.all()
     serializer_class = builder.DeficiencyNotificationSerializer
 
     def get_queryset(self):
