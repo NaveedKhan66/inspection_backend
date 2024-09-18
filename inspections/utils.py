@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from inspections.models import DeficiencyUpdateLog
 from inspections.models import DeficiencyNotification
 import threading
+from datetime import date
 
 User = get_user_model()
 
@@ -54,18 +55,20 @@ def generate_inspection_report_pdf(request, home_inspection):
 
 
 def send_inspection_report_email(request, home_inspection):
-    pdf_file = generate_inspection_report_pdf(request, home_inspection)
-    owner_email = home_inspection.home.owner_email
-    email = EmailMessage(
-        "Inspection Report",
-        "Please find the inspection report attached.",
-        EMAIL_HOST_USER,
-        [owner_email],
-    )
+    if home_inspection.owner_visibility:
+        pdf_file = generate_inspection_report_pdf(request, home_inspection)
+        owner_email = home_inspection.home.owner_email
+        subject = f"{home_inspection.inspection.builder.get_full_name()} - {home_inspection.inspection.name} report - {date.today().strftime('%m/%d/%Y')}"
+        email = EmailMessage(
+            subject,
+            "Please find the inspection report attached.",
+            EMAIL_HOST_USER,
+            [owner_email],
+        )
 
-    email.attach("inspection_report.pdf", pdf_file.getvalue(), "application/pdf")
+        email.attach("inspection_report.pdf", pdf_file.getvalue(), "application/pdf")
 
-    return email.send()
+        return email.send()
 
 
 def get_notification_users(user):
