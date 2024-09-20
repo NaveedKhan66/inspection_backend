@@ -77,9 +77,11 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
             if user.user_type == "employee":
                 user = user.employee.builder.user
 
-            return Deficiency.objects.filter(home_inspection__inspection__builder=user)
+            return Deficiency.objects.filter(
+                home_inspection__inspection__builder=user
+            ).order_by("-id")
         elif user.user_type == "trade":
-            return Deficiency.objects.filter(trade=user)
+            return Deficiency.objects.filter(trade=user).order_by("-id")
         else:
             return Deficiency.objects.none()
 
@@ -132,6 +134,8 @@ class DefImageDeleteView(generics.DestroyAPIView):
 class BuilderTradeDeficiencyListView(generics.ListAPIView):
     serializer_class = builder.DeficiencyListSerializer
     permission_classes = (IsAuthenticated, IsBuilder | IsEmployee)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = DeficiencyFilter
 
     queryset = Deficiency.objects.all()
 
@@ -149,7 +153,7 @@ class BuilderTradeDeficiencyListView(generics.ListAPIView):
 
         if trade_user.user_type == "trade":
             if trade_user.trade.builder.user == user:
-                return super().get_queryset().filter(trade=trade_user)
+                return super().get_queryset().filter(trade=trade_user).order_by("-id")
 
         return Deficiency.objects.none()
 
