@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from datetime import date
+from datetime import date, datetime
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from inspection_backend.settings import EMAIL_HOST_USER
@@ -192,7 +192,10 @@ class SendDeficiencyEmailView(APIView):
             )
 
             msg = EmailMultiAlternatives(
-                due_date + " - " + inspection_name, "", EMAIL_HOST_USER, [email]
+                str(datetime.now()) + " - " + inspection_name,
+                "",
+                EMAIL_HOST_USER,
+                [email],
             )
             msg.attach_alternative(email_content, "text/html")
             msg.send()
@@ -385,40 +388,55 @@ class DeficienciesFilterOptionsView(APIView):
         locations = None
         trades = None
         trade_values = None
+        addresses = None
+        lot_nos = None
+        postal_codes = None
+        deficiencies = None
         if self.request.user.user_type != "trade":
             if self.request.user.user_type == "builder":
                 builder = self.request.user
             elif self.request.user.user_type == "employee":
                 builder = self.request.user.employee.builder.user
+
             trades = User.objects.filter(trade__builder=builder.builder)
             trade_values = trades.distinct().values("id", "first_name", "last_name")
             trade_values = list(trade_values) if trade_values else []
 
+            deficiencies = Deficiency.objects.select_related(
+                "home_inspection__home", "trade"
+            ).exclude(trade__in=trades, location__isnull=True)
             # Get unique locations
-            locations = (
-                Deficiency.objects.exclude(trade__in=trades, location__isnull=True)
-                .values_list("location", flat=True)
-                .distinct()
-            )
+            locations = deficiencies.values_list("location", flat=True).distinct()
+
         if self.request.user.user_type == "trade":
-            locations = (
-                Deficiency.objects.filter(
-                    trade=self.request.user, location__isnull=False
-                )
-                .values_list("location", flat=True)
-                .distinct()
-            )
+            deficiencies = Deficiency.objects.select_related(
+                "home_inspection__home", "trade"
+            ).filter(trade=self.request.user, location__isnull=False)
+            locations = deficiencies.values_list("location", flat=True).distinct()
         # Get status types
         status_types = [
             {"value": status[0], "label": status[1]}
             for status in Deficiency.STATUS_TYPES
         ]
 
+        lot_nos = deficiencies.values_list(
+            "home_inspection__home__lot_no", flat=True
+        ).distinct()
+        addresses = deficiencies.values_list(
+            "home_inspection__home__address", flat=True
+        ).distinct()
+        postal_codes = deficiencies.values_list(
+            "home_inspection__home__postal_code", flat=True
+        ).distinct()
+
         return Response(
             {
                 "trades": trade_values,
                 "status_types": status_types,
                 "locations": list(locations),
+                "lot_nos": lot_nos,
+                "addresses": addresses,
+                "postal_codes": postal_codes,
             }
         )
 

@@ -12,6 +12,11 @@ class DeficiencyFilter(django_filters.FilterSet):
     status = django_filters.ChoiceFilter(choices=Deficiency.STATUS_TYPES)
     trade = django_filters.UUIDFilter(field_name="trade__id")
     search = django_filters.CharFilter(method="filter_search")
+    lot_no = django_filters.UUIDFilter(field_name="home_inspection__home__lot_no")
+    address = django_filters.UUIDFilter(field_name="home_inspection__home__address")
+    postal_code = django_filters.UUIDFilter(
+        field_name="home_inspection__home__postal_code"
+    )
 
     class Meta:
         model = Deficiency
@@ -22,6 +27,10 @@ class DeficiencyFilter(django_filters.FilterSet):
             "location",
             "status",
             "trade",
+            "search",
+            "lot_no",
+            "address",
+            "postal_code",
         ]
 
     def filter_search(self, queryset, name, value):
