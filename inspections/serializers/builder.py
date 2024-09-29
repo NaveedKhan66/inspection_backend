@@ -23,11 +23,15 @@ User = get_user_model()
 
 
 class InspectionSerializer(serializers.ModelSerializer):
+    total_inspections = serializers.SerializerMethodField()
 
     class Meta:
         model = Inspection
         fields = "__all__"
         read_only_fields = ["builder", "no_of_def"]
+
+    def get_total_inspections(self, obj):
+        return HomeInspection.objects.filter(inspection=obj).count()
 
 
 class DefImageSerializer(serializers.ModelSerializer):
@@ -223,6 +227,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
 
 class DeficiencyListSerializer(serializers.ModelSerializer):
     outstanding_days = serializers.SerializerMethodField()
+    home_address = serializers.SerializerMethodField()
 
     class Meta:
         model = Deficiency
@@ -242,6 +247,21 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
             "name": instance.trade.get_full_name(),
         }
         return representation
+
+    def get_home_address(self, obj):
+        home = obj.home_inspection.home
+        home_address = " ".join(
+            [
+                a
+                for a in [
+                    home.lot_no if home.lot_no else "",
+                    home.address if home.address else "",
+                    home.postal_code if home.postal_code else "",
+                ]
+                if a
+            ]
+        )
+        return home_address
 
 
 class InspectionReviewSerializer(serializers.ModelSerializer):

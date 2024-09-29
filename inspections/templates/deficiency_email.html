@@ -1,3 +1,4 @@
+{% load inspections_extras %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -47,6 +48,7 @@
                 <th>Location</th>
                 <th>Status</th>
                 <th>Inspection</th>
+                <th>Home Address</th>
                 <th>Description</th>
             </tr>
         </thead>
@@ -59,6 +61,7 @@
                         {{ deficiency.get_status_display }}
                     </td>
                     <td>{{ deficiency.home_inspection.inspection.name }}</td>
+                    <td class="description">{% get_home_address deficiency %}</td>
                     <td class="description">{{ deficiency.description }}</td>
                 </tr>
             {% endfor %}
