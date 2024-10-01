@@ -228,6 +228,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
 class DeficiencyListSerializer(serializers.ModelSerializer):
     outstanding_days = serializers.SerializerMethodField()
     home_address = serializers.SerializerMethodField()
+    inspection_type = serializers.SerializerMethodField()
 
     class Meta:
         model = Deficiency
@@ -262,6 +263,9 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
             ]
         )
         return home_address
+
+    def get_inspection_type(self, obj):
+        return obj.home_inspection.inspection.name
 
 
 class InspectionReviewSerializer(serializers.ModelSerializer):
