@@ -202,7 +202,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
         if qs is None:
             return None
         try:
-            return qs.filter(id__gt=obj.id).order_by("id").first().id
+            return qs.filter(id__lt=obj.id).order_by("-id").first().id
         except AttributeError:
             return None
 
@@ -212,7 +212,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
             return None
 
         try:
-            return qs.filter(id__lt=obj.id).order_by("-id").first().id
+            return qs.filter(id__gt=obj.id).order_by("id").first().id
         except AttributeError:
             return None
 
