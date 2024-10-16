@@ -55,20 +55,23 @@ def generate_inspection_report_pdf(request, home_inspection):
 
 
 def send_inspection_report_email(request, home_inspection):
+    """Send email to builder and owner"""
+
+    send_email_to = [home_inspection.home.project.builder.email]
+    pdf_file = generate_inspection_report_pdf(request, home_inspection)
     if home_inspection.owner_visibility:
-        pdf_file = generate_inspection_report_pdf(request, home_inspection)
-        owner_email = home_inspection.home.owner_email
-        subject = f"{home_inspection.inspection.builder.get_full_name()} - {home_inspection.inspection.name} report - {date.today().strftime('%m/%d/%Y')}"
-        email = EmailMessage(
-            subject,
-            "Please find the inspection report attached.",
-            EMAIL_HOST_USER,
-            [owner_email],
-        )
+        send_email_to.append(home_inspection.home.owner_email)
+    subject = f"{home_inspection.inspection.builder.get_full_name()} - {home_inspection.inspection.name} report - {date.today().strftime('%m/%d/%Y')}"
+    email = EmailMessage(
+        subject,
+        "Please find the inspection report attached.",
+        EMAIL_HOST_USER,
+        send_email_to,
+    )
 
-        email.attach("inspection_report.pdf", pdf_file.getvalue(), "application/pdf")
+    email.attach("inspection_report.pdf", pdf_file.getvalue(), "application/pdf")
 
-        return email.send()
+    return email.send()
 
 
 def get_notification_users(user):
