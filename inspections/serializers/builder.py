@@ -9,12 +9,10 @@ from inspections.models import (
 from rest_framework import serializers
 from datetime import date
 from django.contrib.auth import get_user_model
-from projects.models import Home
 from django.db import transaction
 from django.utils.text import Truncator
 from inspections.utils import send_inspection_report_email
 import threading
-from django.db.models import Q
 from inspections.utils import get_notification_users
 from inspections.utils import DeficiencyUpdateLogsCreationThread
 from inspections.utils import DeficiencyNotificationsCreationThread
@@ -41,18 +39,62 @@ class DefImageSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
-class DeficiencySerializer(serializers.ModelSerializer):
+class DefCreateSerializer(serializers.ModelSerializer):
     images = DefImageSerializer(many=True, required=False)
-    home = serializers.PrimaryKeyRelatedField(
-        queryset=Home.objects.all(), write_only=True
-    )
-    inspection = serializers.PrimaryKeyRelatedField(
-        queryset=Inspection.objects.all(), write_only=True
-    )
-    owner_visibility = serializers.BooleanField(required=False, write_only=True)
-    home_inspection = serializers.PrimaryKeyRelatedField(
-        queryset=HomeInspection.objects.all(), allow_null=True
-    )
+
+    class Meta:
+        model = Deficiency
+        fields = ["location", "trade", "description", "status", "is_reviewed", "images"]
+
+    def create(self, validated_data):
+        images_data = validated_data.pop("images", [])
+        deficiency = Deficiency.objects.create(**validated_data)
+
+        for image_data in images_data:
+            DefImage.objects.create(deficiency=deficiency, **image_data)
+
+        return deficiency
+
+
+class HomeInspectionCreateSerializer(serializers.ModelSerializer):
+    deficiencies = DefCreateSerializer(many=True, required=False)
+
+    class Meta:
+        model = HomeInspection
+        fields = ["id", "home", "inspection", "owner_visibility", "deficiencies"]
+        write_only_fields = ["home", "inspection"]
+
+    def create(self, validated_data):
+        deficiencies_data = validated_data.pop("deficiencies", [])
+
+        # Create HomeInspection instance
+        home_inspection = HomeInspection.objects.create(**validated_data)
+
+        # Create associated Deficiencies
+        for deficiency_data in deficiencies_data:
+            images_data = deficiency_data.pop("images", [])
+            deficiency = Deficiency.objects.create(
+                home_inspection=home_inspection, **deficiency_data
+            )
+
+            # Create associated DefImages
+            for image_data in images_data:
+                DefImage.objects.create(deficiency=deficiency, **image_data)
+
+        return home_inspection
+
+    def validate(self, data):
+        """
+        Custom validation to ensure home and inspection are valid
+        """
+        if not data.get("home"):
+            raise serializers.ValidationError("Home is required")
+        if not data.get("inspection"):
+            raise serializers.ValidationError("Inspection is required")
+        return data
+
+
+class DeficiencySerializer(serializers.ModelSerializer):
     next = serializers.SerializerMethodField()
     previous = serializers.SerializerMethodField()
 
@@ -67,10 +109,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
             "created_at",
             "status",
             "is_reviewed",
-            "home",
-            "inspection",
             "home_inspection",
-            "owner_visibility",
             "next",
             "previous",
         ]
@@ -98,23 +137,8 @@ class DeficiencySerializer(serializers.ModelSerializer):
         return validated_data
 
     def create(self, validated_data):
-        images_data = validated_data.pop("images", [])
-        inspection = validated_data.pop("inspection")
-        home = validated_data.pop("home")
-        owner_visibility = validated_data.pop("owner_visibility", False)
-
-        home_inspection = validated_data.get("home_inspection")
-        if not home_inspection:
-            home_inspection = HomeInspection.objects.create(
-                home=home, inspection=inspection, owner_visibility=owner_visibility
-            )
-
-        validated_data["home_inspection"] = home_inspection
-
-        deficiency = Deficiency.objects.create(**validated_data)
-        for image_data in images_data:
-            DefImage.objects.create(deficiency=deficiency, **image_data)
-        return deficiency
+        """Overriding this because this is not being used"""
+        pass
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -179,6 +203,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
             DefImage.objects.create(deficiency=instance, **image_data)
 
         if changes:
+            # Create logs and notifications in a different thread for optimisation
             logs_thread = DeficiencyUpdateLogsCreationThread(changes, instance, actor)
             notifications_thread = DeficiencyNotificationsCreationThread(
                 changes, instance, actor, notification_users, builder_user

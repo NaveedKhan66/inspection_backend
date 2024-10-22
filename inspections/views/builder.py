@@ -29,6 +29,7 @@ from users.models import Trade
 from users.permissions import IsTrade
 from users.permissions import IsEmployee
 from django.http import Http404
+from django.db import transaction
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -91,11 +92,30 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
         if self.request.method == "GET":
             if not self.kwargs.get("pk"):
                 serializer_class = builder.DeficiencyListSerializer
+        elif self.request.method == "POST":
+            serializer_class = builder.HomeInspectionCreateSerializer
 
         return serializer_class
 
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """
+        Create a home inspection with nested deficiencies and images
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            home_inspection = serializer.save()
+            return Response(
+                self.get_serializer(home_inspection).data,
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     def retrieve(self, request, *args, **kwargs):
-        # Apply filters even in retrieve
+        # Apply filters even in retrieve to get the next and previous properly
         queryset = self.filter_queryset(self.get_queryset())
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
