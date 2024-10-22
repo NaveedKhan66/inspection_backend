@@ -97,6 +97,7 @@ class HomeInspectionCreateSerializer(serializers.ModelSerializer):
 class DeficiencySerializer(serializers.ModelSerializer):
     next = serializers.SerializerMethodField()
     previous = serializers.SerializerMethodField()
+    images = DefImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Deficiency
