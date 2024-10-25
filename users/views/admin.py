@@ -9,6 +9,7 @@ from rest_framework import viewsets
 from django.contrib.auth import get_user_model
 from users.models import BuilderEmployee
 from django.shortcuts import get_object_or_404
+from users.permissions import IsBuilder
 
 
 User = get_user_model()
@@ -75,4 +76,7 @@ class UserDeleteView(generics.DestroyAPIView):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        permissions.IsAdminUser | IsBuilder,
+    ]
