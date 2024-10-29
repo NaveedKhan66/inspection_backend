@@ -97,7 +97,7 @@ class HomeInspectionCreateSerializer(serializers.ModelSerializer):
 class DeficiencySerializer(serializers.ModelSerializer):
     next = serializers.SerializerMethodField()
     previous = serializers.SerializerMethodField()
-    images = DefImageSerializer(many=True, read_only=True)
+    images = DefImageSerializer(many=True)
 
     class Meta:
         model = Deficiency
@@ -188,6 +188,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
 
         # Check for image additions
         images_data = validated_data.pop("images", [])
+        print(images_data)
         if images_data:
             changes.append("Images Changed: New images added.")
 
@@ -201,6 +202,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
 
         # Create DefImage objects for new images
         for image_data in images_data:
+            print(image_data)
             DefImage.objects.create(deficiency=instance, **image_data)
 
         if changes:
