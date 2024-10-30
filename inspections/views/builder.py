@@ -58,13 +58,13 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsBuilder | IsTrade | IsEmployee]
     filter_backends = [DjangoFilterBackend]
     filterset_class = DeficiencyFilter
-    ordering_fields = ["id"]
-    ordering = ["-id"]
+    ordering_fields = ["updated_at"]
+    ordering = ["-updated_at"]
 
     # TODO: add permission for admin to list deficiencies.
     def filter_queryset(self, queryset):
         queryset = super(DeficiencyViewSet, self).filter_queryset(queryset)
-        return queryset.order_by("-id")
+        return queryset.order_by("-updated_at")
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -80,9 +80,9 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
 
             return Deficiency.objects.filter(
                 home_inspection__inspection__builder=user
-            ).order_by("-id")
+            ).order_by("updated_at")
         elif user.user_type == "trade":
-            return Deficiency.objects.filter(trade=user).order_by("-id")
+            return Deficiency.objects.filter(trade=user).order_by("-updated_at")
         else:
             return Deficiency.objects.none()
 
@@ -173,7 +173,12 @@ class BuilderTradeDeficiencyListView(generics.ListAPIView):
 
         if trade_user.user_type == "trade":
             if trade_user.trade.builder.user == user:
-                return super().get_queryset().filter(trade=trade_user).order_by("-id")
+                return (
+                    super()
+                    .get_queryset()
+                    .filter(trade=trade_user)
+                    .order_by("-updated_at")
+                )
 
         return Deficiency.objects.none()
 
@@ -229,11 +234,13 @@ class HomeInspectionListView(generics.ListAPIView):
     serializer_class = builder.HomeInspectionListSerializer
     permission_classes = [IsAuthenticated, IsBuilder | IsAdminUser | IsEmployee]
     queryset = HomeInspection.objects.all()
+    ordering_fields = ["updated_at"]
+    ordering = ["-updated_at"]
 
     def get_queryset(self):
         home_id = self.kwargs.get("home_id")
         home = get_object_or_404(Home, id=home_id)
-        return super().get_queryset().filter(home=home)
+        return super().get_queryset().filter(home=home).order_by("-updated_at")
 
 
 class TotalDeficiencies(APIView):

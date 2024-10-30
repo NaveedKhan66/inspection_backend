@@ -23,6 +23,7 @@ class HomeInspection(models.Model):
     is_reviewed = models.BooleanField(default=False)
     owner_visibility = models.BooleanField(default=False)
     inspector = models.CharField(max_length=128, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return f"{self.id} {self.inspection.name}"
@@ -49,6 +50,7 @@ class Deficiency(models.Model):
     )
     description = models.TextField()
     created_at = models.DateField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=64, choices=STATUS_TYPES, default="incomplete")
     is_reviewed = models.BooleanField(default=False)
 

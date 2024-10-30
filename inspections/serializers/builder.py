@@ -44,7 +44,16 @@ class DefCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Deficiency
-        fields = ["location", "trade", "description", "status", "is_reviewed", "images"]
+        fields = [
+            "id",
+            "location",
+            "trade",
+            "description",
+            "status",
+            "is_reviewed",
+            "images",
+            "created_at",
+        ]
 
     def create(self, validated_data):
         images_data = validated_data.pop("images", [])
@@ -61,7 +70,14 @@ class HomeInspectionCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HomeInspection
-        fields = ["id", "home", "inspection", "owner_visibility", "deficiencies"]
+        fields = [
+            "id",
+            "home",
+            "inspection",
+            "owner_visibility",
+            "deficiencies",
+            "created_at",
+        ]
         write_only_fields = ["home", "inspection"]
 
     def create(self, validated_data):
@@ -230,7 +246,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
         if qs is None:
             return None
         try:
-            return qs.filter(id__lt=obj.id).order_by("-id").first().id
+            return qs.filter(id__lt=obj.id).order_by("-updated_at").first().id
         except AttributeError:
             return None
 
@@ -240,7 +256,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
             return None
 
         try:
-            return qs.filter(id__gt=obj.id).order_by("id").first().id
+            return qs.filter(id__gt=obj.id).order_by("-updated_at").first().id
         except AttributeError:
             return None
 
