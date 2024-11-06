@@ -245,9 +245,17 @@ class DeficiencySerializer(serializers.ModelSerializer):
         qs = self.get_filtered_queryset()
         if qs is None:
             return None
+
+        # Ensure the queryset is ordered as per the listing
+        qs = qs.order_by("updated_at")
+
+        # Find the index of the current object
         try:
-            return qs.filter(id__lt=obj.id).order_by("-updated_at").first().id
-        except AttributeError:
+            current_index = list(qs).index(obj)
+            # Get the next object if it exists
+            if current_index - 1 >= 0:
+                return qs[current_index - 1].id
+        except (ValueError, IndexError):
             return None
 
     def get_previous(self, obj):
@@ -255,9 +263,16 @@ class DeficiencySerializer(serializers.ModelSerializer):
         if qs is None:
             return None
 
+        # Ensure the queryset is ordered as per the listing
+        qs = qs.order_by("updated_at")
+
+        # Find the index of the current object
         try:
-            return qs.filter(id__gt=obj.id).order_by("-updated_at").first().id
-        except AttributeError:
+            current_index = list(qs).index(obj)
+            # Get the previous object if it exists
+            if current_index + 1 < len(qs):
+                return qs[current_index + 1].id
+        except (ValueError, IndexError):
             return None
 
     def to_representation(self, instance):
