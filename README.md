@@ -46,25 +46,23 @@ To set up the backend locally, follow these steps:
    ```
 
 4. Set up environment variables:
-   Create a `.env` file in the project root and add the following variables:
-   ```
-   DEBUG=True
-   SECRET_KEY=[your-secret-key]
-   DATABASE_URL=[your-database-url]
-   AWS_ACCESS_KEY_ID=[your-aws-access-key]
-   AWS_SECRET_ACCESS_KEY=[your-aws-secret-key]
-   AWS_SES_REGION_NAME=[your-aws-region]
-   ```
+   Get the env file from the developer and place it in the directory `inspections_backend/`
 
-5. Run migrations:
+5. If you want to connect a local database, create the database first and then run migrations
+
+6. Run migrations:
    ```
    python manage.py migrate
    ```
 
-6. Start the development server:
+7. Start the development server:
    ```
    python manage.py runserver
    ```
+
+## Database connections:
+You can connect to the staging and production database locally by using the database credentials present
+in the .env file.
 
 ## Deployment Information
 
@@ -81,6 +79,32 @@ The system is deployed using the following AWS services:
 
 - Email: Amazon SES
   - Handles all transactional emails sent by the system
+
+## Deployment Steps:
+
+1. Make sure the .env file is present in the `inspections_backend/` directory.
+2. Navigate to the root directory of the project.
+3. Run the command
+```
+   eb init -i
+```
+This command will initialize the project.
+4. Select the region ca-central-1 where both the environments are present
+5. Don't use code commit
+6. Python version 3.11 is used
+7. Staging environment name: eagle-eye-Inspection-stagging-env
+8. Production environment name: Inspectionapplication-staging-env
+9. In future you can change the environment by using following commands
+```
+eb list
+```
+this will list all the environments
+10. eb use <environment-name>. This will set the environment as default environment
+2. Run the following command to deploy the application. Only this command can be used in future
+to deploy the application if the setup is done:
+   ```
+   eb deploy
+   ```
 
 ## API Documentation
 
