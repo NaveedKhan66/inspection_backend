@@ -389,7 +389,6 @@ class HomeInspectionListSerializer(serializers.ModelSerializer):
                 "id": home_owner.id,
                 "name": home_owner.get_full_name(),
             }
-        representation["created_at"] = instance.created_at.strftime("%d %B %Y")
         return representation
 
 
@@ -397,11 +396,6 @@ class DeficiencyNotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeficiencyNotification
         fields = "__all__"
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation["created_at"] = instance.created_at.strftime("%d %B %Y")
-        return representation
 
 
 class DeficiencyNotificationReadSerializer(serializers.ModelSerializer):
