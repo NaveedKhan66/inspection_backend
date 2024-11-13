@@ -85,23 +85,29 @@ The system is deployed using the following AWS services:
 1. Make sure the .env file is present in the `inspections_backend/` directory.
 2. Navigate to the root directory of the project.
 3. Run the command
+
 ```
    eb init -i
 ```
 This command will initialize the project.
+
 4. Select the region ca-central-1 where both the environments are present
 5. Don't use code commit
 6. Python version 3.11 is used
 7. Staging environment name: eagle-eye-Inspection-stagging-env
 8. Production environment name: Inspectionapplication-staging-env
 9. In future you can change the environment by using following commands
+
 ```
 eb list
 ```
 this will list all the environments
+
 10. eb use <environment-name>. This will set the environment as default environment
-2. Run the following command to deploy the application. Only this command can be used in future
+
+12. Run the following command to deploy the application. Only this command can be used in future
 to deploy the application if the setup is done:
+
    ```
    eb deploy
    ```
