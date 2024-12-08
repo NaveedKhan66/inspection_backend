@@ -114,6 +114,8 @@ class DeficiencySerializer(serializers.ModelSerializer):
     next = serializers.SerializerMethodField()
     previous = serializers.SerializerMethodField()
     images = DefImageSerializer(many=True)
+    city = serializers.SerializerMethodField()
+    province = serializers.SerializerMethodField()
 
     class Meta:
         model = Deficiency
@@ -129,6 +131,8 @@ class DeficiencySerializer(serializers.ModelSerializer):
             "home_inspection",
             "next",
             "previous",
+            "city",
+            "province",
         ]
         read_only_fields = ["created_at", "is_reviewed"]
 
@@ -275,6 +279,12 @@ class DeficiencySerializer(serializers.ModelSerializer):
         except (ValueError, IndexError):
             return None
 
+    def get_city(self, obj):
+        return obj.home_inspection.home.project.city
+
+    def get_province(self, obj):
+        return obj.home_inspection.home.project.province
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation["trade"] = {
@@ -288,6 +298,8 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
     outstanding_days = serializers.SerializerMethodField()
     home_address = serializers.SerializerMethodField()
     inspection_type = serializers.SerializerMethodField()
+    province = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
 
     class Meta:
         model = Deficiency
@@ -325,6 +337,12 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
 
     def get_inspection_type(self, obj):
         return obj.home_inspection.inspection.name
+
+    def get_province(self, obj):
+        return obj.home_inspection.home.project.province
+
+    def get_city(self, obj):
+        return obj.home_inspection.home.project.city
 
 
 class InspectionReviewSerializer(serializers.ModelSerializer):
