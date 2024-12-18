@@ -453,10 +453,10 @@ class DeficienciesFilterOptionsView(APIView):
                 for b in builder_values
             ]
 
-            # Get projects where trade has deficiencies
+            # Fix: Update the projects query to properly follow relationships
             projects = (
                 Project.objects.filter(
-                    homes__homeinspection__deficiency__trade=self.request.user
+                    homes__homeinspection__deficiencies__trade=self.request.user
                 )
                 .distinct()
                 .values("id", "name")
