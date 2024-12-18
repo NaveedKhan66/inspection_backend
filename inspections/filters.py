@@ -17,6 +17,12 @@ class DeficiencyFilter(django_filters.FilterSet):
     postal_code = django_filters.CharFilter(
         field_name="home_inspection__home__postal_code"
     )
+    project_id = django_filters.UUIDFilter(
+        field_name="home_inspection__home__project__id"
+    )
+    builder_id = django_filters.UUIDFilter(
+        field_name="home_inspection__inspection__builder__id"
+    )
 
     class Meta:
         model = Deficiency
@@ -31,6 +37,8 @@ class DeficiencyFilter(django_filters.FilterSet):
             "lot_no",
             "address",
             "postal_code",
+            "project_id",
+            "builder_id",
         ]
 
     def filter_search(self, queryset, name, value):
