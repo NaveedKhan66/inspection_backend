@@ -421,12 +421,20 @@ class DeficienciesFilterOptionsView(APIView):
         postal_codes = None
         deficiencies = None
         builders = None
-        projects = None
+        project_values = None
+        inspections = None
         if self.request.user.user_type != "trade":
             if self.request.user.user_type == "builder":
                 builder = self.request.user
             elif self.request.user.user_type == "employee":
                 builder = self.request.user.employee.builder.user
+
+            # Get inspections for builder/employee
+            inspections = (
+                Inspection.objects.filter(builder=builder)
+                .values("id", "name")
+                .distinct()
+            )
 
             trades = User.objects.filter(trade__builder=builder.builder)
             trade_values = trades.distinct().values("id", "first_name", "last_name")
@@ -439,6 +447,15 @@ class DeficienciesFilterOptionsView(APIView):
             locations = deficiencies.values_list("location", flat=True).distinct()
 
         if self.request.user.user_type == "trade":
+            # Get inspections for trade
+            inspections = (
+                Inspection.objects.filter(
+                    homeinspection_set__deficiencies__trade=self.request.user
+                )
+                .values("id", "name")
+                .distinct()
+            )
+
             # Get all builders associated with this trade
             trade = self.request.user.trade
             builder_values = trade.builder.all().values(
@@ -492,6 +509,7 @@ class DeficienciesFilterOptionsView(APIView):
                 "postal_codes": postal_codes,
                 "builders": builders,
                 "projects": project_values,
+                "inspections": list(inspections),
             }
         )
 
