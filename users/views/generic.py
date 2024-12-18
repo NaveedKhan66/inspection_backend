@@ -4,7 +4,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
 from users.serializers.generic import UpdateFirstLoginSerializer
 from users.serializers.generic import UpdateUserDetailSerializer
-from users.serializers.generic import CreateUserSerializer
+from users.serializers.generic import AdminCreateUserSerializer
+from users.serializers.generic import BuilderCreateUserSerializer
 from users.serializers.generic import SetPasswordSerializer
 from users.serializers.generic import ForgetPasswordSerializer
 from users.serializers.generic import UserProfileSerializer
@@ -51,15 +52,24 @@ class UpdateUserDetailView(generics.UpdateAPIView):
         return self.request.user
 
 
-class CreateUserView(generics.CreateAPIView):
+class AdminCreateUserView(generics.CreateAPIView):
     """
     Following users can create other users
     Admin can create Builders, Clients.
-    Builders can create Trades
     """
 
     queryset = User.objects.all()
-    serializer_class = CreateUserSerializer
+    serializer_class = AdminCreateUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class BuilderCreateUserView(generics.CreateAPIView):
+    """
+    This endpoint will be used by Builders to create Trades.
+    Builders can only create Trades.
+    """
+
+    serializer_class = BuilderCreateUserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 

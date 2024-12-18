@@ -71,9 +71,7 @@ class Trade(models.Model):
         default=uuid.uuid4, primary_key=True, db_index=True, editable=False
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="trade")
-    builder = models.ForeignKey(
-        Builder, on_delete=models.CASCADE, related_name="trades"
-    )
+    builder = models.ManyToManyField(Builder, related_name="trades")
     services = models.CharField(max_length=128, null=True, blank=True)
 
     def __str__(self):

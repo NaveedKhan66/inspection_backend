@@ -31,7 +31,7 @@ admin.site.register(BuilderEmployee, BuilderEmployeeAdmin)
 
 
 class TradeAdmin(admin.ModelAdmin):
-    list_display = ["id", "user", "builder"]
+    list_display = ["id", "user"]
 
 
 admin.site.register(Trade, TradeAdmin)
