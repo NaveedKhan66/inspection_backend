@@ -172,7 +172,8 @@ class BuilderTradeDeficiencyListView(generics.ListAPIView):
             user = self.request.user.employee.builder.user
 
         if trade_user.user_type == "trade":
-            if trade_user.trade.builder.user == user:
+            # Check if the trade is associated with the builder
+            if user.builder in trade_user.trade.builder.all():
                 return (
                     super()
                     .get_queryset()
