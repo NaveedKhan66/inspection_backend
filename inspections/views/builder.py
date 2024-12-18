@@ -450,7 +450,7 @@ class DeficienciesFilterOptionsView(APIView):
             # Get inspections for trade
             inspections = (
                 Inspection.objects.filter(
-                    homeinspection_set__deficiencies__trade=self.request.user
+                    homeinspection__deficiencies__trade=self.request.user
                 )
                 .values("id", "name")
                 .distinct()
