@@ -420,6 +420,8 @@ class DeficienciesFilterOptionsView(APIView):
         lot_nos = None
         postal_codes = None
         deficiencies = None
+        builders = None
+        projects = None
         if self.request.user.user_type != "trade":
             if self.request.user.user_type == "builder":
                 builder = self.request.user
@@ -437,16 +439,40 @@ class DeficienciesFilterOptionsView(APIView):
             locations = deficiencies.values_list("location", flat=True).distinct()
 
         if self.request.user.user_type == "trade":
+            # Get all builders associated with this trade
+            trade = self.request.user.trade
+            builder_values = trade.builder.all().values(
+                "user__id", "user__first_name", "user__last_name", "user__email"
+            )
+            builders = [
+                {
+                    "id": b["user__id"],
+                    "name": f"{b['user__first_name']} {b['user__last_name']}",
+                    "email": b["user__email"],
+                }
+                for b in builder_values
+            ]
+
+            # Get projects where trade has deficiencies
+            projects = (
+                Project.objects.filter(
+                    homes__homeinspection__deficiency__trade=self.request.user
+                )
+                .distinct()
+                .values("id", "name")
+            )
+            project_values = list(projects)
+
             deficiencies = Deficiency.objects.select_related(
                 "home_inspection__home", "trade"
             ).filter(trade=self.request.user, location__isnull=False)
             locations = deficiencies.values_list("location", flat=True).distinct()
+
         # Get status types
         status_types = [
             {"value": status[0], "label": status[1]}
             for status in Deficiency.STATUS_TYPES
         ]
-
         lot_nos = deficiencies.values_list(
             "home_inspection__home__lot_no", flat=True
         ).distinct()
@@ -456,7 +482,6 @@ class DeficienciesFilterOptionsView(APIView):
         postal_codes = deficiencies.values_list(
             "home_inspection__home__postal_code", flat=True
         ).distinct()
-
         return Response(
             {
                 "trades": trade_values,
@@ -465,6 +490,8 @@ class DeficienciesFilterOptionsView(APIView):
                 "lot_nos": lot_nos,
                 "addresses": addresses,
                 "postal_codes": postal_codes,
+                "builders": builders,
+                "projects": project_values,
             }
         )
 
