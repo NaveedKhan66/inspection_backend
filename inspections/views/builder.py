@@ -177,7 +177,7 @@ class BuilderTradeDeficiencyListView(generics.ListAPIView):
                 return (
                     super()
                     .get_queryset()
-                    .filter(trade=trade_user)
+                    .filter(trade=trade_user, home_inspection__inspection__builder=user)
                     .order_by("-updated_at")
                 )
 
