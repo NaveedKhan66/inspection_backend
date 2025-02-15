@@ -196,8 +196,8 @@ class DeficiencySerializer(serializers.ModelSerializer):
             "description" in validated_data
             and validated_data["description"] != instance.description
         ):
-            old_desc = Truncator(instance.description).chars(30)
-            new_desc = Truncator(validated_data["description"]).chars(30)
+            old_desc = Truncator(instance.description).chars(300)
+            new_desc = Truncator(validated_data["description"]).chars(300)
             changes.append(f"Description Changed: From '{old_desc}' to '{new_desc}'")
 
         # Check for status change
