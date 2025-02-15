@@ -172,11 +172,12 @@ class BuilderTradeDeficiencyListView(generics.ListAPIView):
             user = self.request.user.employee.builder.user
 
         if trade_user.user_type == "trade":
-            if trade_user.trade.builder.user == user:
+            # Check if the trade is associated with the builder
+            if user.builder in trade_user.trade.builder.all():
                 return (
                     super()
                     .get_queryset()
-                    .filter(trade=trade_user)
+                    .filter(trade=trade_user, home_inspection__inspection__builder=user)
                     .order_by("-updated_at")
                 )
 
@@ -419,11 +420,21 @@ class DeficienciesFilterOptionsView(APIView):
         lot_nos = None
         postal_codes = None
         deficiencies = None
+        builders = None
+        project_values = None
+        inspections = None
         if self.request.user.user_type != "trade":
             if self.request.user.user_type == "builder":
                 builder = self.request.user
             elif self.request.user.user_type == "employee":
                 builder = self.request.user.employee.builder.user
+
+            # Get inspections for builder/employee
+            inspections = (
+                Inspection.objects.filter(builder=builder)
+                .values("id", "name")
+                .distinct()
+            )
 
             trades = User.objects.filter(trade__builder=builder.builder)
             trade_values = trades.distinct().values("id", "first_name", "last_name")
@@ -436,16 +447,49 @@ class DeficienciesFilterOptionsView(APIView):
             locations = deficiencies.values_list("location", flat=True).distinct()
 
         if self.request.user.user_type == "trade":
+            # Get inspections for trade
+            inspections = (
+                Inspection.objects.filter(
+                    homeinspection__deficiencies__trade=self.request.user
+                )
+                .values("id", "name")
+                .distinct()
+            )
+
+            # Get all builders associated with this trade
+            trade = self.request.user.trade
+            builder_values = trade.builder.all().values(
+                "user__id", "user__first_name", "user__last_name", "user__email"
+            )
+            builders = [
+                {
+                    "id": b["user__id"],
+                    "name": f"{b['user__first_name']} {b['user__last_name']}",
+                    "email": b["user__email"],
+                }
+                for b in builder_values
+            ]
+
+            # Fix: Update the projects query to properly follow relationships
+            projects = (
+                Project.objects.filter(
+                    homes__homeinspection__deficiencies__trade=self.request.user
+                )
+                .distinct()
+                .values("id", "name")
+            )
+            project_values = list(projects)
+
             deficiencies = Deficiency.objects.select_related(
                 "home_inspection__home", "trade"
             ).filter(trade=self.request.user, location__isnull=False)
             locations = deficiencies.values_list("location", flat=True).distinct()
+
         # Get status types
         status_types = [
             {"value": status[0], "label": status[1]}
             for status in Deficiency.STATUS_TYPES
         ]
-
         lot_nos = deficiencies.values_list(
             "home_inspection__home__lot_no", flat=True
         ).distinct()
@@ -455,7 +499,6 @@ class DeficienciesFilterOptionsView(APIView):
         postal_codes = deficiencies.values_list(
             "home_inspection__home__postal_code", flat=True
         ).distinct()
-
         return Response(
             {
                 "trades": trade_values,
@@ -464,6 +507,9 @@ class DeficienciesFilterOptionsView(APIView):
                 "lot_nos": lot_nos,
                 "addresses": addresses,
                 "postal_codes": postal_codes,
+                "builders": builders,
+                "projects": project_values,
+                "inspections": list(inspections),
             }
         )
 

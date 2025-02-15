@@ -71,8 +71,8 @@ class UpdateUserDetailSerializer(serializers.ModelSerializer):
         }
 
 
-class CreateUserSerializer(serializers.ModelSerializer):
-    """Serializer to create multiple builders clients and trades"""
+class AdminCreateUserSerializer(serializers.ModelSerializer):
+    """Serializer to create multiple builders and clients"""
 
     user_type = serializers.ChoiceField(choices=User.USER_TYPES)
     builder = serializers.PrimaryKeyRelatedField(
@@ -125,12 +125,11 @@ class CreateUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"detail": "Builder employees cannot create another user"}
             )
-        elif (
-            user.user_type == "builder"
-            and not validated_data.get("user_type") == "trade"
-        ):
+        elif user.user_type == "builder":
             raise serializers.ValidationError(
-                {"detail": "Builders can only create Trades"}
+                {
+                    "detail": "Builders can only create Trades but not through this endpoint"
+                }
             )
         elif user.user_type == "admin" and validated_data.get("user_type") == "trade":
             raise serializers.ValidationError({"detail": "Admin cannot create Trades"})
@@ -173,12 +172,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         elif user_type == "client":
             client = Client.objects.create(user=user)
 
-        elif user_type == "trade":
-            services = validated_data.get("services")
-            trade = Trade.objects.create(
-                user=user, builder=request.user.builder, services=services
-            )
-
         elif user_type == "employee":
             builder_user = validated_data.get("builder")
             role = validated_data.get("role")
@@ -196,9 +189,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        if instance.user_type == "trade":
-            representation["services"] = instance.trade.services
-            representation.pop("builder")
 
         if instance.user_type == "builder" or instance.user_type == "client":
             representation.pop("builder")
@@ -215,6 +205,75 @@ def validate_token_not_blacklisted(value):
             "This token has already been used and is no longer valid."
         )
     return value
+
+
+class BuilderCreateUserSerializer(serializers.Serializer):
+    """Serializer to create or add multiple trades"""
+
+    email = serializers.EmailField()
+    services = serializers.CharField(max_length=128, required=False)
+    first_name = serializers.CharField(required=False)
+
+    def validate_email(self, value):
+        email = value.lower()
+        user = User.objects.filter(email=email).first()
+
+        if user and user.user_type != "trade":
+            raise serializers.ValidationError(
+                "This email is already registered with a different user type"
+            )
+
+        return email
+
+    def validate(self, attrs):
+        super().validate(attrs)
+        request = self.context.get("request")
+
+        if request.user.user_type != "builder":
+            raise serializers.ValidationError(
+                {"detail": "Only builders can create or add trades"}
+            )
+
+        return super().validate(attrs)
+
+    @transaction.atomic()
+    def create(self, validated_data):
+        email = validated_data["email"]
+        request = self.context.get("request")
+        builder = request.user.builder
+
+        # Check if trade user already exists
+        existing_user = User.objects.filter(email=email).first()
+
+        if existing_user:
+            # User exists and must be trade (due to validation)
+            trade = existing_user.trade
+            trade.builder.add(builder)
+            return existing_user
+
+        # Create new trade user
+        user = User.objects.create(
+            username=email,
+            email=email,
+            user_type="trade",
+            first_name=validated_data.get("first_name", ""),
+        )
+        user.set_unusable_password()
+        user.save()
+
+        # Create trade and associate with builder
+        trade = Trade.objects.create(user=user, services=validated_data.get("services"))
+        trade.builder.add(builder)
+
+        # Send reset password email
+        token = AccessToken.for_user(user)
+        send_reset_email(user.email, str(token))
+
+        return user
+
+    class Meta:
+        model = User
+        fields = ["id", "first_name", "email", "services"]
 
 
 class SetPasswordSerializer(serializers.Serializer):

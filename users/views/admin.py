@@ -10,6 +10,8 @@ from django.contrib.auth import get_user_model
 from users.models import BuilderEmployee
 from django.shortcuts import get_object_or_404
 from users.permissions import IsBuilder
+from rest_framework.response import Response
+from rest_framework import status
 
 
 User = get_user_model()
@@ -72,7 +74,7 @@ class AdminBuilderEmployeeRetrieveUpdateDeleteView(
 
 
 class UserDeleteView(generics.DestroyAPIView):
-    """View to delete users"""
+    """View to delete users and handle trade removal"""
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -80,3 +82,33 @@ class UserDeleteView(generics.DestroyAPIView):
         permissions.IsAuthenticated,
         permissions.IsAdminUser | IsBuilder,
     ]
+
+    def delete(self, request, *args, **kwargs):
+        user = self.get_object()
+
+        # If user is a trade and requester is a builder
+        if user.user_type == "trade" and request.user.user_type == "builder":
+            trade = user.trade
+            builder = request.user.builder
+
+            # Remove association with current builder
+            trade.builder.remove(builder)
+
+            # If trade is not associated with any builders, delete the trade user
+            if trade.builder.count() == 0:
+                user.delete()
+                return Response(
+                    {
+                        "detail": "Trade has been deleted as it was not associated with any other builders."
+                    },
+                    status=status.HTTP_204_NO_CONTENT,
+                )
+
+            return Response(
+                {"detail": "Trade has been removed from your list."},
+                status=status.HTTP_200_OK,
+            )
+
+        # For admin or other user types, proceed with normal deletion
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

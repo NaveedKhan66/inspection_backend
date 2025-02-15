@@ -39,7 +39,12 @@ urlpatterns = [
         generic.UpdateUserDetailView.as_view(),
         name="update-user-detail",
     ),
-    path("user/", generic.CreateUserView.as_view(), name="create-user"),
+    path("user/", generic.AdminCreateUserView.as_view(), name="admin-create-user"),
+    path(
+        "user-trade/",
+        generic.BuilderCreateUserView.as_view(),
+        name="builder-create-user",
+    ),
     path(
         "auth/user/password/",
         generic.SetUserPasswordView.as_view(),
