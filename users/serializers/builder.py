@@ -24,8 +24,16 @@ class BuilderTradeListSerializer(serializers.ModelSerializer):
         return obj.trade.services
 
     def get_incomplete_items(self, obj):
+        user = self.context["request"].user
+
+        # retrieving the actual builder user in case of employee
+        if user.user_type == "employee":
+            user = user.employee.builder.user
+
         incomplete_statuses = ["incomplete", "pending_approval"]
-        return obj.deficiencies.filter(status__in=incomplete_statuses).count()
+        return obj.deficiencies.filter(
+            status__in=incomplete_statuses, home_inspection__inspection__builder=user
+        ).count()
 
 
 class OwnerInviteSerializer(serializers.Serializer):
