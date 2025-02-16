@@ -82,6 +82,8 @@ class HomeInspectionCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         deficiencies_data = validated_data.pop("deficiencies", [])
+        user = self.context["request"].user
+        builder_user, notification_users = get_notification_users(user)
 
         # Create HomeInspection instance
         home_inspection = HomeInspection.objects.create(**validated_data)
@@ -92,6 +94,14 @@ class HomeInspectionCreateSerializer(serializers.ModelSerializer):
             deficiency = Deficiency.objects.create(
                 home_inspection=home_inspection, **deficiency_data
             )
+            changes = [
+                f"{user.get_full_name()} Created a new Deficiency: {deficiency.id}"
+            ]
+            # Create notifications
+            notifications_thread = DeficiencyNotificationsCreationThread(
+                changes, deficiency, user, notification_users, builder_user
+            )
+            notifications_thread.start()
 
             # Create associated DefImages
             for image_data in images_data:
