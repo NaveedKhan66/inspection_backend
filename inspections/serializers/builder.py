@@ -316,11 +316,11 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
         exclude = ["home_inspection"]
 
     def get_outstanding_days(self, obj):
-        if obj.status == "complete":
-            return 0
+        if obj.completion_date:
+            delta = obj.completion_date - obj.created_at
         else:
             delta = date.today() - obj.created_at
-            return delta.days
+        return delta.days
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

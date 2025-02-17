@@ -1,6 +1,7 @@
 from typing import Iterable
 from django.db import models
 import uuid
+from django.utils import timezone
 
 
 class Inspection(models.Model):
@@ -53,14 +54,18 @@ class Deficiency(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=64, choices=STATUS_TYPES, default="incomplete")
     is_reviewed = models.BooleanField(default=False)
+    completion_date = models.DateField(null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.id} {self.home_inspection}"
 
     def save(self, *args, **kwargs):
-        """Maintain no_of_def in Inspection model"""
+        """Maintain no_of_def in Inspection model and set completion date if status is complete"""
 
         is_new = self.pk is None
+        # Check if the status is being updated to 'complete'
+        if self.status == "complete" and self.completion_date is None:
+            self.completion_date = timezone.now().date()
 
         super().save(*args, **kwargs)
 
