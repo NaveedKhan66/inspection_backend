@@ -336,9 +336,9 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
             [
                 a
                 for a in [
-                    home.lot_no if home.lot_no else "",
+                    home.street_no if home.street_no else "",
                     home.address if home.address else "",
-                    home.postal_code if home.postal_code else "",
+                    home.city if home.city else "",
                 ]
                 if a
             ]
