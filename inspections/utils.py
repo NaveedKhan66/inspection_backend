@@ -10,11 +10,12 @@ from inspections.models import DeficiencyUpdateLog
 from inspections.models import DeficiencyNotification
 import threading
 from datetime import date
+from inspections.models import HomeInspection
 
 User = get_user_model()
 
 
-def get_inspection_data(home_inspection):
+def get_inspection_data(home_inspection: HomeInspection):
     builder = home_inspection.home.project.builder
     home = home_inspection.home
     home_owner_email = home.owner_email
@@ -27,7 +28,7 @@ def get_inspection_data(home_inspection):
     inspector_signature = inspection_review_object.inspector_signature_image
     owner_signature = inspection_review_object.owner_signature_image
     inspection_name = inspection_review_object.home_inspection.inspection.name
-    address_list = [home.street_no, home.city, home.postal_code, home.address]
+    address_list = [home.street_no, home.address, home.city]
     home_address = " ".join([a for a in address_list if a])
     context = {
         "inspection_name": inspection_name,
@@ -39,6 +40,7 @@ def get_inspection_data(home_inspection):
         "deficiencies": deficiencies,
         "inspector_signature": inspector_signature,
         "owner_signature": owner_signature,
+        "inspector_name": home_inspection.inspector,
     }
     return context
 
