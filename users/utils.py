@@ -3,6 +3,7 @@ from inspection_backend.settings import RESET_PASSOWRD_LINK
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from users.models import BuilderEmployee
+from django.template.loader import render_to_string
 
 User = get_user_model()
 
@@ -14,6 +15,24 @@ def send_reset_email(email, token):
         f"Click the link to set your password: {link}",
         EMAIL_HOST_USER,
         [email],
+        fail_silently=False,
+    )
+
+
+def send_trade_welcome_email(trade, builder):
+    subject = "Welcome to the team!"
+    message = render_to_string(
+        "trade_welcome_email.html",
+        {
+            "trade": trade,
+            "builder": builder,
+        },
+    )
+    send_mail(
+        subject,
+        message,
+        EMAIL_HOST_USER,
+        [trade.user.email],
         fail_silently=False,
     )
 

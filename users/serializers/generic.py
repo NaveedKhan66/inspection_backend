@@ -14,6 +14,7 @@ from users.utils import (
     send_reset_email,
     create_employee_for_builder,
     set_password_for_employee,
+    send_trade_welcome_email,
 )
 from django.db import transaction
 
@@ -249,6 +250,7 @@ class BuilderCreateUserSerializer(serializers.Serializer):
             # User exists and must be trade (due to validation)
             trade = existing_user.trade
             trade.builder.add(builder)
+            send_trade_welcome_email(trade, builder)
             return existing_user
 
         # Create new trade user
@@ -268,7 +270,7 @@ class BuilderCreateUserSerializer(serializers.Serializer):
         # Send reset password email
         token = AccessToken.for_user(user)
         send_reset_email(user.email, str(token))
-
+        send_trade_welcome_email(trade, builder)
         return user
 
     class Meta:
