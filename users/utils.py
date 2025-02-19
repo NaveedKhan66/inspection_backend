@@ -4,6 +4,7 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from users.models import BuilderEmployee
 from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
 
 User = get_user_model()
 
@@ -20,7 +21,7 @@ def send_reset_email(email, token):
 
 
 def send_trade_welcome_email(trade, builder):
-    subject = "Welcome to the team!"
+    subject = f"You have been added to {builder.user.first_name}'s Trade List"
     message = render_to_string(
         "trade_welcome_email.html",
         {
@@ -28,13 +29,15 @@ def send_trade_welcome_email(trade, builder):
             "builder": builder,
         },
     )
-    send_mail(
+
+    msg = EmailMultiAlternatives(
         subject,
-        message,
+        "",
         EMAIL_HOST_USER,
         [trade.user.email],
-        fail_silently=False,
     )
+    msg.attach_alternative(message, "text/html")
+    msg.send()
 
 
 def create_employee_for_builder(instance):
