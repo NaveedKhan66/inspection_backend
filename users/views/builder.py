@@ -23,19 +23,12 @@ class BuilderTradeListView(
     queryset = User.objects.filter(user_type="trade")
 
     def get_queryset(self):
-        user = None
-        if self.request.user.user_type == "builder":
-            user = self.request.user
-        elif self.request.user.user_type == "employee":
-            user = self.request.user.employee.builder.user
+        builder = None
 
-        # Get the builder instance
-        if user and user.user_type == "builder":
-            builder = user.builder
-        elif user and user.user_type == "employee":
+        if self.request.user.user_type == "builder":
+            builder = self.request.user.builder
+        elif self.request.user.user_type == "employee":
             builder = self.request.user.employee.builder
-        else:
-            return User.objects.none()
 
         # Filter trades associated with this builder through the many-to-many relationship
         return super().get_queryset().filter(trade__builder=builder)

@@ -27,7 +27,7 @@ class TradeDeficiencyListView(generics.ListAPIView):
 class DeficiencyUpdateLogListView(generics.ListAPIView):
     serializer_class = trade.DeficiencyUpdateLogSerializer
     ordering_fields = ["created_at"]
-    ordering = ["-created_at"]
+    ordering = ["created_at"]
 
     def get_queryset(self):
         deficiency_id = self.kwargs.get("id")
