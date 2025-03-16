@@ -9,8 +9,9 @@ from django.contrib.auth import get_user_model
 from inspections.models import DeficiencyUpdateLog
 from inspections.models import DeficiencyNotification
 import threading
-from datetime import date
+from datetime import date, datetime
 from inspections.models import HomeInspection
+import pytz
 
 User = get_user_model()
 
@@ -30,6 +31,14 @@ def get_inspection_data(home_inspection: HomeInspection):
     inspection_name = inspection_review_object.home_inspection.inspection.name
     address_list = [home.street_no, home.address, home.city]
     home_address = " ".join([a for a in address_list if a])
+
+    # Get Ontario timezone
+    ontario_tz = pytz.timezone("America/Toronto")
+    # Get current UTC time and convert to Ontario timezone
+    creation_date = (
+        datetime.now(pytz.UTC).astimezone(ontario_tz).strftime("%B %d, %Y at %I:%M %p")
+    )
+
     context = {
         "inspection_name": inspection_name,
         "builder": builder,
@@ -41,6 +50,7 @@ def get_inspection_data(home_inspection: HomeInspection):
         "inspector_signature": inspector_signature,
         "owner_signature": owner_signature,
         "inspector_name": home_inspection.inspector,
+        "creation_date": creation_date,
     }
     return context
 
