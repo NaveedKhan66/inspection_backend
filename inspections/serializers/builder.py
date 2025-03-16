@@ -160,7 +160,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
             if user.user_type == "employee":
                 user = user.employee.builder.user
 
-            if trade.trade.builder.user != user:
+            if user not in trade.trade.builder.user.all():
                 raise serializers.ValidationError(
                     {"detail": "Trade belongs to another builder."}
                 )
