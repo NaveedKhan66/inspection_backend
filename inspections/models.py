@@ -20,7 +20,7 @@ class Inspection(models.Model):
 class HomeInspection(models.Model):
     inspection = models.ForeignKey("inspections.Inspection", on_delete=models.CASCADE)
     home = models.ForeignKey("projects.Home", on_delete=models.CASCADE)
-    created_at = models.DateField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     is_reviewed = models.BooleanField(default=False)
     owner_visibility = models.BooleanField(default=False)
     inspector = models.CharField(max_length=128, null=True, blank=True)
