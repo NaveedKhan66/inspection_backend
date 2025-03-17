@@ -161,11 +161,6 @@ class DeficiencySerializer(serializers.ModelSerializer):
             if user.user_type == "employee":
                 user = user.employee.builder.user
 
-            if user not in trade.trade.builder.user.all():
-                raise serializers.ValidationError(
-                    {"detail": "Trade belongs to another builder."}
-                )
-
         return validated_data
 
     def create(self, validated_data):
