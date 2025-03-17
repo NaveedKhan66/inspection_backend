@@ -94,13 +94,15 @@ def get_notification_users(user):
     if user.user_type == "builder":
         notification_users = User.objects.filter(employee__builder__user=user)
     elif user.user_type == "trade":
-        builder_user = user.trade.builder.user
-        notification_users = User.objects.filter(employee__builder__user=builder_user)
+        # Get all builders associated with the trade
+        builders = user.trade.builder.all()
+        # Get all employees for all builders
+        notification_users = User.objects.filter(employee__builder__in=builders)
     elif user.user_type == "employee":
         builder_user = user.employee.builder.user
         notification_users = User.objects.filter(employee__builder__user=builder_user)
 
-    return builder_user, notification_users
+    return notification_users
 
 
 def bulk_create_deficiency_update_logs(changes, instance, actor):

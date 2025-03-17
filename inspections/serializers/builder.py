@@ -83,7 +83,8 @@ class HomeInspectionCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         deficiencies_data = validated_data.pop("deficiencies", [])
         user = self.context["request"].user
-        builder_user, notification_users = get_notification_users(user)
+        builder_user = validated_data.get("inspection").builder
+        notification_users = get_notification_users(user)
 
         # Create HomeInspection instance
         home_inspection = HomeInspection.objects.create(**validated_data)
@@ -177,7 +178,8 @@ class DeficiencySerializer(serializers.ModelSerializer):
         actor = request.user if request else None
 
         # populate users to which the notification will be sent
-        builder_user, notification_users = get_notification_users(request.user)
+        builder_user = instance.home_inspection.inspection.builder
+        notification_users = get_notification_users(request.user)
 
         # Track changes
         changes = []
