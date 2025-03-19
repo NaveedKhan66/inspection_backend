@@ -414,6 +414,8 @@ class HomeInspectionListSerializer(serializers.ModelSerializer):
                 "id": home_owner.id,
                 "name": home_owner.get_full_name(),
             }
+        home_province = instance.home.province
+        representation["home_province"] = home_province
         return representation
 
 
