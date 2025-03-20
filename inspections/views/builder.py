@@ -144,10 +144,16 @@ class DefImageDeleteView(generics.DestroyAPIView):
     queryset = DefImage.objects.all()
 
     def get_queryset(self):
+        user = None
+        if self.request.user.user_type == "builder":
+            user = self.request.user
+        elif self.request.user.user_type == "employee":
+            user = self.request.user.employee.builder.user
+
         return (
             super()
             .get_queryset()
-            .filter(deficiency__inspection__builder=self.request.user)
+            .filter(deficiency__home_inspection__inspection__builder=user)
         )
 
 
