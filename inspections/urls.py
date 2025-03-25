@@ -93,4 +93,9 @@ urlpatterns = [
         builder.DeficiencyNotificationAllReadView.as_view(),
         name="deficiency-notifications-all-read",
     ),
+    path(
+        "home-inspection/<int:pk>/due-date/",
+        builder.HomeInspectionDueDateUpdateView.as_view(),
+        name="home-inspection-due-date-update",
+    ),
 ]

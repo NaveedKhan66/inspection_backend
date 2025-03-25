@@ -25,6 +25,7 @@ class HomeInspection(models.Model):
     owner_visibility = models.BooleanField(default=False)
     inspector = models.CharField(max_length=128, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+    due_date = models.DateField(null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.id} {self.inspection.name}"

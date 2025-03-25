@@ -30,6 +30,7 @@ from users.permissions import IsTrade
 from users.permissions import IsEmployee
 from django.http import Http404
 from django.db import transaction
+from rest_framework.serializers import ModelSerializer
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -546,3 +547,9 @@ class DeficiencyNotificationAllReadView(APIView):
         notifications = DeficiencyNotification.objects.filter(user=user)
         notifications.update(read=True)
         return Response(status=status.HTTP_200_OK)
+
+
+class HomeInspectionDueDateUpdateView(generics.UpdateAPIView):
+    queryset = HomeInspection.objects.all()
+    serializer_class = builder.HomeInspectionDueDateSerializer
+    lookup_field = "pk"

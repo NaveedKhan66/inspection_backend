@@ -307,6 +307,7 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
     inspection_type = serializers.SerializerMethodField()
     province = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
+    due_date = serializers.SerializerMethodField()
 
     class Meta:
         model = Deficiency
@@ -350,6 +351,9 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
 
     def get_city(self, obj):
         return obj.home_inspection.home.project.city
+
+    def get_due_date(self, obj):
+        return obj.home_inspection.due_date
 
 
 class InspectionReviewSerializer(serializers.ModelSerializer):
@@ -435,3 +439,9 @@ class DeficiencyNotificationReadSerializer(serializers.ModelSerializer):
         instance.read = True
         instance.save()
         return instance
+
+
+class HomeInspectionDueDateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeInspection
+        fields = ["due_date"]
