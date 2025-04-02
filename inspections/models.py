@@ -51,7 +51,7 @@ class Deficiency(models.Model):
         related_name="deficiencies",
     )
     description = models.TextField()
-    created_at = models.DateField(auto_now_add=True, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=64, choices=STATUS_TYPES, default="incomplete")
     is_reviewed = models.BooleanField(default=False)
