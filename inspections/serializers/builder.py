@@ -317,7 +317,7 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
         if obj.completion_date:
             delta = obj.completion_date - obj.created_at
         else:
-            delta = date.today() - obj.created_at
+            delta = date.today() - obj.created_at.date()
         return delta.days
 
     def to_representation(self, instance):
