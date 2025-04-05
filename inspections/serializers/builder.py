@@ -315,7 +315,7 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
 
     def get_outstanding_days(self, obj):
         if obj.completion_date:
-            delta = obj.completion_date - obj.created_at
+            delta = obj.completion_date - obj.created_at.date()
         else:
             delta = date.today() - obj.created_at.date()
         return delta.days
