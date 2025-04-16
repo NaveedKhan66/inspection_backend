@@ -445,3 +445,46 @@ class HomeInspectionDueDateSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeInspection
         fields = ["due_date"]
+
+
+class HomeInspectionSerializer(serializers.ModelSerializer):
+    inspection_type = serializers.SerializerMethodField()
+    lot_no = serializers.SerializerMethodField()
+    address = serializers.SerializerMethodField()
+    total_items = serializers.SerializerMethodField()
+    completed_items = serializers.SerializerMethodField()
+    pending_items = serializers.SerializerMethodField()
+
+    class Meta:
+        model = HomeInspection
+        fields = [
+            "id",
+            "inspection_type",
+            "created_at",
+            "due_date",
+            "lot_no",
+            "address",
+            "total_items",
+            "completed_items",
+            "pending_items",
+        ]
+
+    def get_inspection_type(self, obj):
+        return obj.inspection.name
+
+    def get_lot_no(self, obj):
+        return obj.home.lot_no
+
+    def get_address(self, obj):
+        return obj.home.street_no + " " + obj.home.address
+
+    def get_total_items(self, obj):
+        return Deficiency.objects.filter(home_inspection=obj).count()
+
+    def get_completed_items(self, obj):
+        return Deficiency.objects.filter(home_inspection=obj, status="complete").count()
+
+    def get_pending_items(self, obj):
+        return Deficiency.objects.filter(
+            home_inspection=obj, status__in=["incomplete", "pending_approval"]
+        ).count()

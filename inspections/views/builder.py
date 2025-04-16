@@ -553,3 +553,25 @@ class HomeInspectionDueDateUpdateView(generics.UpdateAPIView):
     queryset = HomeInspection.objects.all()
     serializer_class = builder.HomeInspectionDueDateSerializer
     lookup_field = "pk"
+
+
+class HomeInspectionView(generics.ListAPIView):
+    serializer_class = builder.HomeInspectionSerializer
+    permission_classes = [IsAuthenticated, IsBuilder | IsEmployee]
+    queryset = HomeInspection.objects.all()
+
+    def get_queryset(self):
+        builder = None
+        if self.request.user.user_type == "builder":
+            builder = self.request.user
+        elif self.request.user.user_type == "employee":
+            builder = self.request.user.employee.builder.user
+
+        inspection_id = self.kwargs.get("inspection_id")
+        if inspection_id:
+            return (
+                super()
+                .get_queryset()
+                .filter(home__project__builder=builder, inspection_id=inspection_id)
+            )
+        return super().get_queryset().filter(home__project__builder=builder)

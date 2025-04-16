@@ -98,4 +98,9 @@ urlpatterns = [
         builder.HomeInspectionDueDateUpdateView.as_view(),
         name="home-inspection-due-date-update",
     ),
+    path(
+        "home-inspections/<uuid:inspection_id>/",
+        builder.HomeInspectionView.as_view(),
+        name="inspection-home-inspections-list",
+    ),
 ]
