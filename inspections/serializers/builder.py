@@ -454,6 +454,7 @@ class HomeInspectionSerializer(serializers.ModelSerializer):
     total_items = serializers.SerializerMethodField()
     completed_items = serializers.SerializerMethodField()
     pending_items = serializers.SerializerMethodField()
+    province = serializers.SerializerMethodField()
 
     class Meta:
         model = HomeInspection
@@ -488,3 +489,6 @@ class HomeInspectionSerializer(serializers.ModelSerializer):
         return Deficiency.objects.filter(
             home_inspection=obj, status__in=["incomplete", "pending_approval"]
         ).count()
+
+    def get_province(self, obj):
+        return obj.home.province
