@@ -468,6 +468,7 @@ class HomeInspectionSerializer(serializers.ModelSerializer):
             "total_items",
             "completed_items",
             "pending_items",
+            "province",
         ]
 
     def get_inspection_type(self, obj):
