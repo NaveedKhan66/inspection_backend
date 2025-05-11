@@ -500,6 +500,9 @@ class DeficienciesFilterOptionsView(APIView):
         lot_nos = deficiencies.values_list(
             "home_inspection__home__lot_no", flat=True
         ).distinct()
+        street_nos = deficiencies.values_list(
+            "home_inspection__home__street_no", flat=True
+        ).distinct()
         addresses = deficiencies.values_list(
             "home_inspection__home__address", flat=True
         ).distinct()
@@ -512,6 +515,7 @@ class DeficienciesFilterOptionsView(APIView):
                 "status_types": status_types,
                 "locations": list(locations),
                 "lot_nos": lot_nos,
+                "street_nos": street_nos,
                 "addresses": addresses,
                 "postal_codes": postal_codes,
                 "builders": builders,
