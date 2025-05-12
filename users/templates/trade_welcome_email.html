@@ -5,42 +5,38 @@
     <title>You Have Been Added to {{ builder.name }} Trade List</title>
   </head>
   <body>
-    <p>Dear {{ trade.user.first_name }},</p>
-
+    <p>Hi {{ trade.user.first_name }},</p>
     <p>
-      We are pleased to inform you that {{ builder.user.first_name }} has added your
-      company to their trade list in <strong>Builder Eye</strong>. This means
-      you are now linked to their projects and may receive work assignments for
-      inspections, deficiencies, and service requests.
+      Good news! {{ builder.user.first_name }} has added you as a trusted trade partner on <strong>Builder Eye</strong>.
     </p>
 
-    <h2 style="font-size: 24px">What's Next?</h2>
+    <h2 style="font-size: 24px">You can now:</h2>
     <ul>
       <li>
-        You may start receiving task assignments from {{ builder.user.first_name }} through
-        Builder Eye.
+        View tasks and deficiencies assigned by {{ builder.user.first_name }}.
       </li>
       <li>
-        You can now request work orders, purchase orders, and ROIs directly
-        through the platform.
+        Upload updates, images, and completion notes.
       </li>
       <li>
-        Please ensure your contact details and availability are up to date in
-        the system.
+       Track your progress across multiple projects
       </li>
     </ul>
 
-    <p>
-      If you have any questions or require assistance, feel free to reach out to
-      our support team at
-      <a href="mailto:info@thebuildereye.com">info@thebuildereye.com</a>.
+    <p style="font-size: 16px; margin-top: 20px;">
+      Log In here:
+      <a href="{{ signin_url }}" style="color: #007BFF; text-decoration: none;">
+        Builder Eye Login
+      </a>
     </p>
 
-    <p>Welcome aboard! We look forward to a smooth collaboration.</p>
+    <p>
+     If you're new to Builder Eye and haven't signed up yet, you can register using the invitation link we previously sent. Can't find it? Let us know—we're happy to help.
+    </p>
 
     <p>
-      Best regards,<br />
-      Builder Eye Team
+      Warm Regards,<br />
+      The Builder Eye Team
     </p>
   </body>
 </html>

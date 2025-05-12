@@ -5,28 +5,58 @@ from django.contrib.auth import get_user_model
 from users.models import BuilderEmployee
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
+from inspection_backend.settings import FRONTEND_URL
 
 User = get_user_model()
 
 
-def send_reset_email(email, token):
-    link = f"{RESET_PASSOWRD_LINK}?token={token}"
-    send_mail(
-        "Reset your password",
-        f"Click the link to set your password: {link}",
-        EMAIL_HOST_USER,
-        [email],
-        fail_silently=False,
-    )
+def send_reset_email(email, token, builder, trade=False):
+    """
+    Sends reset password email to builder and trade
+    """
+    if not trade:
+        link = f"{RESET_PASSOWRD_LINK}?token={token}"
+        send_mail(
+            "Reset your password",
+            f"Click the link to set your password: {link}",
+            EMAIL_HOST_USER,
+            [email],
+            fail_silently=False,
+        )
+    else:
+        subject = (
+            f"You're Invited to Join Builder Eye - Simplify Your Project Management"
+        )
+        message = render_to_string(
+            "trade_welcome_email.html",
+            {
+                "trade": trade,
+                "builder": builder,
+                "reset_url": RESET_PASSOWRD_LINK,
+            },
+        )
+
+        msg = EmailMultiAlternatives(
+            subject,
+            "",
+            EMAIL_HOST_USER,
+            [trade.user.email],
+        )
+        msg.attach_alternative(message, "text/html")
+        msg.send()
 
 
 def send_trade_welcome_email(trade, builder):
-    subject = f"You have been added to {builder.user.first_name}'s Trade List"
+    subject = (
+        f"{builder.user.first_name} Has Added You to Their Trade List on Builder Eye"
+    )
+    signin_url = f"{FRONTEND_URL}/signin"
     message = render_to_string(
         "trade_welcome_email.html",
         {
             "trade": trade,
             "builder": builder,
+            "signin_url": signin_url,
         },
     )
 
