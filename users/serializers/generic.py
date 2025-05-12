@@ -310,7 +310,19 @@ class ForgetPasswordSerializer(serializers.Serializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    version = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ["id", "email", "first_name", "last_name", "profile_picture"]
-        read_only_fields = ["id", "email"]
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "profile_picture",
+            "version",
+        ]
+        read_only_fields = ["id", "email", "version"]
+
+    def get_version(self, obj):
+        return "1.3.0"

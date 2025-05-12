@@ -30,8 +30,14 @@ class BuilderTradeListView(
         elif self.request.user.user_type == "employee":
             builder = self.request.user.employee.builder
 
-        # Filter trades associated with this builder through the many-to-many relationship
-        return super().get_queryset().filter(trade__builder=builder)
+        queryset = super().get_queryset().filter(trade__builder=builder)
+
+        # Add search by first_name if search parameter is provided
+        search_query = self.request.query_params.get("search", None)
+        if search_query:
+            queryset = queryset.filter(first_name__icontains=search_query)
+
+        return queryset
 
 
 class OwnerInviteView(APIView):
