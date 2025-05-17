@@ -1,5 +1,6 @@
 import django_filters
-from inspections.models import Deficiency
+from inspections.models import Deficiency, HomeInspection
+from django.db.models import Count, Q
 
 
 class DeficiencyFilter(django_filters.FilterSet):
@@ -52,3 +53,60 @@ class DeficiencyFilter(django_filters.FilterSet):
 
         # Convert the ID field to string for partial matching
         return queryset.filter(id__icontains=value)
+
+
+class HomeInspectionFilter(django_filters.FilterSet):
+    sort_by = django_filters.ChoiceFilter(
+        choices=[
+            ("total_items", "Total Items"),
+            ("completed_items", "Completed Items"),
+            ("pending_items", "Pending Items"),
+            ("due_date", "Due Date"),
+        ],
+        method="filter_sort",
+    )
+    sort_order = django_filters.ChoiceFilter(
+        choices=[
+            ("asc", "Ascending"),
+            ("desc", "Descending"),
+        ],
+        method="filter_sort",
+    )
+
+    class Meta:
+        model = HomeInspection
+        fields = ["sort_by", "sort_order"]
+
+    def filter_sort(self, queryset, name, value):
+        sort_by = self.data.get("sort_by", "due_date")
+        sort_order = self.data.get("sort_order", "desc")
+
+        if sort_by in ["total_items", "completed_items", "pending_items"]:
+            if sort_by == "total_items":
+                queryset = queryset.annotate(
+                    total_items_count=Count("deficiencies")
+                ).order_by(f"{'-' if sort_order == 'desc' else ''}total_items_count")
+            elif sort_by == "completed_items":
+                queryset = queryset.annotate(
+                    completed_items_count=Count(
+                        "deficiencies", filter=Q(deficiencies__status="complete")
+                    )
+                ).order_by(
+                    f"{'-' if sort_order == 'desc' else ''}completed_items_count"
+                )
+            elif sort_by == "pending_items":
+                queryset = queryset.annotate(
+                    pending_items_count=Count(
+                        "deficiencies",
+                        filter=Q(
+                            deficiencies__status__in=["incomplete", "pending_approval"]
+                        ),
+                    )
+                ).order_by(f"{'-' if sort_order == 'desc' else ''}pending_items_count")
+        else:
+            # Handle sorting for due_date
+            queryset = queryset.order_by(
+                f"{'-' if sort_order == 'desc' else ''}due_date"
+            )
+
+        return queryset

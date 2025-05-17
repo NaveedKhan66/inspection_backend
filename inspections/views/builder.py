@@ -31,6 +31,7 @@ from users.permissions import IsEmployee
 from django.http import Http404
 from django.db import transaction
 from rest_framework.serializers import ModelSerializer
+from inspections.filters import HomeInspectionFilter
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -560,6 +561,8 @@ class HomeInspectionView(generics.ListAPIView):
     serializer_class = builder.HomeInspectionSerializer
     permission_classes = [IsAuthenticated, IsBuilder | IsEmployee]
     queryset = HomeInspection.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = HomeInspectionFilter
 
     def get_queryset(self):
         builder = None
@@ -569,10 +572,9 @@ class HomeInspectionView(generics.ListAPIView):
             builder = self.request.user.employee.builder.user
 
         inspection_id = self.kwargs.get("inspection_id")
+        queryset = super().get_queryset().filter(home__project__builder=builder)
+
         if inspection_id:
-            return (
-                super()
-                .get_queryset()
-                .filter(home__project__builder=builder, inspection_id=inspection_id)
-            )
-        return super().get_queryset().filter(home__project__builder=builder)
+            queryset = queryset.filter(inspection_id=inspection_id)
+
+        return queryset
