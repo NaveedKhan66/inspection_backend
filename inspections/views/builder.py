@@ -65,7 +65,7 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
     # TODO: add permission for admin to list deficiencies.
     def filter_queryset(self, queryset):
         queryset = super(DeficiencyViewSet, self).filter_queryset(queryset)
-        return queryset.order_by("-updated_at")
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -79,11 +79,9 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
             if user.user_type == "employee":
                 user = user.employee.builder.user
 
-            return Deficiency.objects.filter(
-                home_inspection__inspection__builder=user
-            ).order_by("updated_at")
+            return Deficiency.objects.filter(home_inspection__inspection__builder=user)
         elif user.user_type == "trade":
-            return Deficiency.objects.filter(trade=user).order_by("-updated_at")
+            return Deficiency.objects.filter(trade=user)
         else:
             return Deficiency.objects.none()
 
@@ -185,7 +183,6 @@ class BuilderTradeDeficiencyListView(generics.ListAPIView):
                     super()
                     .get_queryset()
                     .filter(trade=trade_user, home_inspection__inspection__builder=user)
-                    .order_by("-updated_at")
                 )
 
         return Deficiency.objects.none()

@@ -16,12 +16,7 @@ class TradeDeficiencyListView(generics.ListAPIView):
     queryset = Deficiency.objects.all()
 
     def get_queryset(self):
-        return (
-            super()
-            .get_queryset()
-            .filter(trade=self.request.user)
-            .order_by("-updated_at")
-        )
+        return super().get_queryset().filter(trade=self.request.user)
 
 
 class DeficiencyUpdateLogListView(generics.ListAPIView):

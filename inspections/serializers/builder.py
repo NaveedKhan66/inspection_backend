@@ -257,9 +257,6 @@ class DeficiencySerializer(serializers.ModelSerializer):
         if qs is None:
             return None
 
-        # Ensure the queryset is ordered as per the listing
-        qs = qs.order_by("updated_at")
-
         # Find the index of the current object
         try:
             current_index = list(qs).index(obj)
@@ -273,9 +270,6 @@ class DeficiencySerializer(serializers.ModelSerializer):
         qs = self.get_filtered_queryset()
         if qs is None:
             return None
-
-        # Ensure the queryset is ordered as per the listing
-        qs = qs.order_by("updated_at")
 
         # Find the index of the current object
         try:
