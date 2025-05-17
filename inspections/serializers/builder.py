@@ -135,6 +135,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
             "location",
             "trade",
             "description",
+            "edit_description",
             "images",
             "created_at",
             "status",
@@ -205,6 +206,11 @@ class DeficiencySerializer(serializers.ModelSerializer):
         ):
             old_desc = Truncator(instance.description).chars(300)
             new_desc = Truncator(validated_data["description"]).chars(300)
+            changes.append(f"Description Changed: From '{old_desc}' to '{new_desc}'")
+
+        if "edit_description" in validated_data:
+            old_desc = Truncator(instance.edit_description).chars(300)
+            new_desc = Truncator(validated_data["edit_description"]).chars(300)
             changes.append(f"Description Changed: From '{old_desc}' to '{new_desc}'")
 
         # Check for status change
