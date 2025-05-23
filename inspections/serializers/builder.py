@@ -258,7 +258,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
             return view.filter_queryset(queryset)
         return None
 
-    def get_next(self, obj):
+    def get_previous(self, obj):
         qs = self.get_filtered_queryset()
         if qs is None:
             return None
@@ -272,7 +272,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
         except (ValueError, IndexError):
             return None
 
-    def get_previous(self, obj):
+    def get_next(self, obj):
         qs = self.get_filtered_queryset()
         if qs is None:
             return None
