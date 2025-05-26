@@ -10,11 +10,11 @@ from inspection_backend.settings import FRONTEND_URL
 User = get_user_model()
 
 
-def send_reset_email(email, token, builder, trade=False):
+def send_reset_email(email, token, builder=None, trade=None, is_trade=False):
     """
     Sends reset password email to builder and trade
     """
-    if not trade:
+    if not is_trade:
         link = f"{RESET_PASSOWRD_LINK}?token={token}"
         send_mail(
             "Reset your password",
@@ -24,6 +24,11 @@ def send_reset_email(email, token, builder, trade=False):
             fail_silently=False,
         )
     else:
+        if not trade:
+            raise Exception("Trade must be provided if is_trade is True")
+        if not builder:
+            raise Exception("Builder must be provided if is_trade is True")
+
         subject = (
             f"You're Invited to Join Builder Eye - Simplify Your Project Management"
         )

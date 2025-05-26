@@ -269,7 +269,7 @@ class BuilderCreateUserSerializer(serializers.Serializer):
 
         # Send reset password email
         token = AccessToken.for_user(user)
-        send_reset_email(user.email, str(token), builder, trade=True)
+        send_reset_email(user.email, str(token), builder, trade, is_trade=True)
         send_trade_welcome_email(trade, builder)
         return user
 
