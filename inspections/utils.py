@@ -73,7 +73,7 @@ def send_inspection_report_email(request, home_inspection):
     pdf_file = generate_inspection_report_pdf(request, home_inspection)
     if home_inspection.owner_visibility:
         send_email_to.append(home_inspection.home.owner_email)
-    subject = f"Pre-Delivery Inspection Report - {home_inspection.home.street_no} {home_inspection.home.address} - {home_inspection.inspection.builder.get_full_name()} - {date.today().strftime('%m/%d/%Y')}"
+    subject = f"{home_inspection.inspection.name} Report - {home_inspection.home.street_no} {home_inspection.home.address} - {home_inspection.inspection.builder.get_full_name()} - {date.today().strftime('%m/%d/%Y')}"
     email = EmailMessage(
         subject,
         "Please find the inspection report attached.",
