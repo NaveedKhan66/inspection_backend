@@ -1,6 +1,7 @@
 import django_filters
 from inspections.models import Deficiency, HomeInspection
-from django.db.models import Count, Q, Cast, IntegerField, Concat, Value, CharField
+from django.db.models import Count, Q, IntegerField, Value, CharField
+from django.db.models.functions import Cast, Concat
 
 
 class DeficiencyFilter(django_filters.FilterSet):
