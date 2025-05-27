@@ -1,6 +1,6 @@
 import django_filters
 from inspections.models import Deficiency, HomeInspection
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Cast, IntegerField, Concat, Value, CharField
 
 
 class DeficiencyFilter(django_filters.FilterSet):
@@ -62,6 +62,9 @@ class HomeInspectionFilter(django_filters.FilterSet):
             ("completed_items", "Completed Items"),
             ("pending_items", "Pending Items"),
             ("due_date", "Due Date"),
+            ("lot_no", "Lot No."),
+            ("address", "Address"),
+            ("created_at", "Created Date"),
         ],
         method="filter_sort",
     )
@@ -103,6 +106,26 @@ class HomeInspectionFilter(django_filters.FilterSet):
                         ),
                     )
                 ).order_by(f"{'-' if sort_order == 'desc' else ''}pending_items_count")
+        elif sort_by == "lot_no":
+            # Sort by lot_no numerically
+            queryset = queryset.annotate(
+                lot_no_int=Cast("home__lot_no", output_field=IntegerField())
+            ).order_by(f"{'-' if sort_order == 'desc' else ''}lot_no_int")
+        elif sort_by == "address":
+            # Sort by concatenated street_no and address
+            queryset = queryset.annotate(
+                full_address=Concat(
+                    "home__street_no",
+                    Value(" "),
+                    "home__address",
+                    output_field=CharField(),
+                )
+            ).order_by(f"{'-' if sort_order == 'desc' else ''}full_address")
+        elif sort_by == "created_at":
+            # Sort by created_at date
+            queryset = queryset.order_by(
+                f"{'-' if sort_order == 'desc' else ''}created_at"
+            )
         else:
             # Handle sorting for due_date
             queryset = queryset.order_by(
