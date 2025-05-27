@@ -19,7 +19,7 @@ def send_reset_email(email, token, builder=None, trade=None, is_trade=False):
         send_mail(
             "Reset your password",
             f"Click the link to set your password: {link}",
-            EMAIL_HOST_USER,
+            f"Builder Eye <{EMAIL_HOST_USER}>",
             [email],
             fail_silently=False,
         )
@@ -33,7 +33,7 @@ def send_reset_email(email, token, builder=None, trade=None, is_trade=False):
             f"You're Invited to Join Builder Eye - Simplify Your Project Management"
         )
         message = render_to_string(
-            "trade_welcome_email.html",
+            "trade_password_reset_email.html",
             {
                 "trade": trade,
                 "builder": builder,
@@ -44,7 +44,7 @@ def send_reset_email(email, token, builder=None, trade=None, is_trade=False):
         msg = EmailMultiAlternatives(
             subject,
             "",
-            EMAIL_HOST_USER,
+            f"Builder Eye <{EMAIL_HOST_USER}>",
             [trade.user.email],
         )
         msg.attach_alternative(message, "text/html")
@@ -68,7 +68,7 @@ def send_trade_welcome_email(trade, builder):
     msg = EmailMultiAlternatives(
         subject,
         "",
-        EMAIL_HOST_USER,
+        f"Builder Eye <{EMAIL_HOST_USER}>",
         [trade.user.email],
     )
     msg.attach_alternative(message, "text/html")

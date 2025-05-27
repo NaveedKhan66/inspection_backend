@@ -55,7 +55,7 @@ class OwnerInviteView(APIView):
                     send_mail(
                         "Inspection Invitation",
                         text,
-                        EMAIL_HOST_USER,
+                        f"Builder Eye <{EMAIL_HOST_USER}>",
                         [owner.email],
                         fail_silently=False,
                     )
@@ -65,7 +65,7 @@ class OwnerInviteView(APIView):
                     send_mail(
                         "Reset your password",
                         f"Click the link to set your password: {link}",
-                        EMAIL_HOST_USER,
+                        f"Builder Eye <{EMAIL_HOST_USER}>",
                         [owner.email],
                         fail_silently=False,
                     )

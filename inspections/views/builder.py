@@ -54,6 +54,15 @@ class InspectionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(builder=self.request.user)
 
+    def destroy(self, request, *args, **kwargs):
+        """Employee type users are not allowed to delete inspections"""
+        if request.user.user_type == "employee":
+            return Response(
+                {"detail": "Employees are not allowed to delete inspections."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().destroy(request, *args, **kwargs)
+
 
 class DeficiencyViewSet(viewsets.ModelViewSet):
     serializer_class = builder.DeficiencySerializer
@@ -225,7 +234,7 @@ class SendDeficiencyEmailView(APIView):
             msg = EmailMultiAlternatives(
                 str(datetime.now()) + " - " + inspection_name,
                 "",
-                EMAIL_HOST_USER,
+                f"Builder Eye <{EMAIL_HOST_USER}>",
                 [email],
             )
             msg.attach_alternative(email_content, "text/html")
