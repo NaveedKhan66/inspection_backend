@@ -30,6 +30,13 @@ class HomeInspection(models.Model):
     def __str__(self) -> str:
         return f"{self.id} {self.inspection.name}"
 
+    def delete(self, *args, **kwargs):
+        """Subtract the count of deficiencies from Inspection model before deletion"""
+        deficiency_count = self.deficiencies.count()
+        self.inspection.no_of_def -= deficiency_count
+        self.inspection.save()
+        super().delete(*args, **kwargs)
+
 
 class Deficiency(models.Model):
     STATUS_TYPES = (

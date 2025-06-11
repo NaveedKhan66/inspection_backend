@@ -177,6 +177,9 @@ class DeficiencyNotificationsCreationThread(threading.Thread):
         self.builder_user = builder_user
 
     def run(self):
+        if self.actor == self.builder_user:
+            """Builder cannot be notified for their own actions"""
+            self.builder_user = None
         bulk_create_deficiency_notifications(
             self.changes,
             self.instance,

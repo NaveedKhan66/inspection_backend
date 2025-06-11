@@ -138,6 +138,14 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        """Trade and Employee type users are not allowed to delete deficiencies"""
+        if request.user.user_type in ["trade", "employee"]:
+            return Response(
+                {
+                    "detail": f"{request.user.user_type} users are not allowed to delete deficiencies."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         instance = self.get_object()
         inspection = instance.home_inspection.inspection
         response = super().destroy(request, *args, **kwargs)

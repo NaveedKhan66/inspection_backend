@@ -175,6 +175,7 @@ class DeficiencySerializer(serializers.ModelSerializer):
 
         # populate users to which the notification will be sent
         builder_user = instance.home_inspection.inspection.builder
+
         notification_users = get_notification_users(request.user)
 
         # Track changes
