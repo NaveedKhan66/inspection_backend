@@ -546,6 +546,7 @@ class DeficiencyNotificationListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsBuilder | IsEmployee | IsTrade]
     queryset = DeficiencyNotification.objects.all()
     serializer_class = builder.DeficiencyNotificationSerializer
+    page_size = 50
 
     def get_queryset(self):
         queryset = super().get_queryset()
