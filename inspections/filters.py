@@ -114,14 +114,9 @@ class HomeInspectionFilter(django_filters.FilterSet):
             ).order_by(f"{'-' if sort_order == 'desc' else ''}lot_no_int")
         elif sort_by == "address":
             # Sort by concatenated street_no and address
-            queryset = queryset.annotate(
-                full_address=Concat(
-                    "home__street_no",
-                    Value(" "),
-                    "home__address",
-                    output_field=CharField(),
-                )
-            ).order_by(f"{'-' if sort_order == 'desc' else ''}full_address")
+            queryset = queryset.order_by(
+                f"{'-' if sort_order == 'desc' else ''}home__address"
+            )
         elif sort_by == "created_at":
             # Sort by created_at date
             queryset = queryset.order_by(
