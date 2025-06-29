@@ -343,26 +343,15 @@ class DeficiencyFilterView(APIView):
             builder = request.user.employee.builder.user
 
         inspection = request.query_params.get("inspection")
-        trade_name = request.query_params.get("trade")
 
         builder_deficiencies = Deficiency.objects.select_related(
             "home_inspection"
         ).filter(home_inspection__inspection__builder=builder)
         deficiencies = None
 
-        if inspection and trade_name:
-            deficiencies = builder_deficiencies.filter(
-                home_inspection__inspection__name=inspection,
-                trade__first_name__contains=trade_name,
-            )
-
-        elif inspection:
+        if inspection:
             deficiencies = builder_deficiencies.filter(
                 home_inspection__inspection__name=inspection
-            )
-        elif trade_name:
-            deficiencies = builder_deficiencies.filter(
-                trade__first_name__contains=trade_name
             )
         else:
             deficiencies = builder_deficiencies
@@ -370,10 +359,12 @@ class DeficiencyFilterView(APIView):
         total_deficiencies = deficiencies.count()
         complete_deficiencies = deficiencies.filter(status="complete").count()
         incomplete_deficiencies = total_deficiencies - complete_deficiencies
+        pending_deficiencies = deficiencies.filter(status="pending_approval").count()
         response_data = {
             "total_deficiencies": total_deficiencies,
             "complete_deficiencies": complete_deficiencies,
             "incomplete_deficiencies": incomplete_deficiencies,
+            "pending_approval_deficiencies": pending_deficiencies,
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -405,20 +396,34 @@ class DeficiencyInspectionFilterView(APIView):
         response_data = []
 
         for trade in trades:
-            total_deficiencies = deficiencies.count()
+            total_deficiencies = deficiencies.filter(trade=trade.user).count()
             complete_deficiencies = deficiencies.filter(
                 trade=trade.user, status="complete"
             ).count()
-            incomplete_deficiencies = total_deficiencies - complete_deficiencies
+            incomplete_deficiencies = deficiencies.filter(
+                trade=trade.user, status="incomplete"
+            ).count()
+            pending_deficiencies = deficiencies.filter(
+                trade=trade.user, status="pending_approval"
+            ).count()
             incomplete_deficiencies_pct = 0
             if total_deficiencies > 0:
                 incomplete_deficiencies_pct = (
                     incomplete_deficiencies / total_deficiencies
                 ) * 100
+            complete_deficiencies_pct = 0
+            if total_deficiencies > 0:
+                complete_deficiencies_pct = (
+                    complete_deficiencies / total_deficiencies
+                ) * 100
             response_data.append(
                 {
                     "trade": trade.user.get_full_name(),
                     "incomplete_percentage": int(incomplete_deficiencies_pct),
+                    "complete_percentage": int(complete_deficiencies_pct),
+                    "complete_deficiencies": complete_deficiencies,
+                    "incomplete_deficiencies": incomplete_deficiencies,
+                    "pending_deficiencies": pending_deficiencies,
                 }
             )
 
