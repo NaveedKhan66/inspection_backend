@@ -103,4 +103,9 @@ urlpatterns = [
         builder.HomeInspectionView.as_view(),
         name="inspection-home-inspections-list",
     ),
+    path(
+        "home-inspection/<int:pk>/",
+        builder.HomeInspectionDeleteView.as_view(),
+        name="home-inspection-delete",
+    ),
 ]

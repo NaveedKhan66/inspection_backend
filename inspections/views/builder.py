@@ -601,3 +601,26 @@ class HomeInspectionView(generics.ListAPIView):
             queryset = queryset.filter(inspection_id=inspection_id)
 
         return queryset
+
+
+class HomeInspectionDeleteView(generics.DestroyAPIView):
+    """View to allow builders and admins to delete home inspections"""
+
+    permission_classes = [IsAuthenticated, IsBuilder | IsAdminUser]
+    queryset = HomeInspection.objects.all()
+    lookup_field = "pk"
+
+    def get_queryset(self):
+        """Filter queryset to ensure builders can only delete their own home inspections"""
+        queryset = super().get_queryset()
+        if self.request.user.user_type == "admin":
+            return queryset
+        return queryset.filter(inspection__builder=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(
+            {"detail": "Home inspection deleted successfully."},
+            status=status.HTTP_200_OK,
+        )
