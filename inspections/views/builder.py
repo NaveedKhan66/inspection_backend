@@ -483,29 +483,35 @@ class DeficienciesFilterOptionsView(APIView):
                 .distinct()
             )
 
-            # Get all builders associated with this trade
+            # Get all builders associated with this trade with their projects
             trade = self.request.user.trade
             builder_values = trade.builder.all().values(
                 "user__id", "user__first_name", "user__last_name", "user__email"
             )
-            builders = [
-                {
-                    "id": b["user__id"],
-                    "name": f"{b['user__first_name']} {b['user__last_name']}",
-                    "email": b["user__email"],
-                }
-                for b in builder_values
-            ]
 
-            # Fix: Update the projects query to properly follow relationships
-            projects = (
-                Project.objects.filter(
-                    homes__homeinspection__deficiencies__trade=self.request.user
+            # Create builders list with nested projects
+            builders = []
+            for b in builder_values:
+                builder_projects = (
+                    Project.objects.filter(
+                        builder_id=b["user__id"],
+                        homes__homeinspection__deficiencies__trade=self.request.user,
+                    )
+                    .distinct()
+                    .values("id", "name")
                 )
-                .distinct()
-                .values("id", "name")
-            )
-            project_values = list(projects)
+
+                builders.append(
+                    {
+                        "id": b["user__id"],
+                        "name": f"{b['user__first_name']} {b['user__last_name']}",
+                        "email": b["user__email"],
+                        "projects": list(builder_projects),
+                    }
+                )
+
+            # Keep project_values as None since we're now nesting projects under builders
+            project_values = None
 
             deficiencies = Deficiency.objects.select_related(
                 "home_inspection__home", "trade"
@@ -529,20 +535,23 @@ class DeficienciesFilterOptionsView(APIView):
         postal_codes = deficiencies.values_list(
             "home_inspection__home__postal_code", flat=True
         ).distinct()
-        return Response(
-            {
-                "trades": trade_values,
-                "status_types": status_types,
-                "locations": list(locations),
-                "lot_nos": lot_nos,
-                "street_nos": street_nos,
-                "addresses": addresses,
-                "postal_codes": postal_codes,
-                "builders": builders,
-                "projects": project_values,
-                "inspections": list(inspections),
-            }
-        )
+        response_data = {
+            "trades": trade_values,
+            "status_types": status_types,
+            "locations": list(locations),
+            "lot_nos": lot_nos,
+            "street_nos": street_nos,
+            "addresses": addresses,
+            "postal_codes": postal_codes,
+            "builders": builders,
+            "inspections": list(inspections),
+        }
+
+        # Only include projects separately if project_values is not None (for builder/employee users)
+        if project_values is not None:
+            response_data["projects"] = project_values
+
+        return Response(response_data)
 
 
 class DeficiencyNotificationListView(generics.ListAPIView):
