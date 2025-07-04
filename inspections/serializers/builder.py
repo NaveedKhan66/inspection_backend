@@ -16,6 +16,8 @@ import threading
 from inspections.utils import get_notification_users
 from inspections.utils import DeficiencyUpdateLogsCreationThread
 from inspections.utils import DeficiencyNotificationsCreationThread
+from inspections.utils import create_due_date_change_logs
+from inspections.utils import create_due_date_change_logs
 
 User = get_user_model()
 
@@ -446,6 +448,24 @@ class HomeInspectionDueDateSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeInspection
         fields = ["due_date"]
+
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+        actor = request.user if request else None
+
+        # Store the old due date before updating
+        old_due_date = instance.due_date
+
+        # Update the instance
+        instance = super().update(instance, validated_data)
+
+        # Check if due date actually changed
+        new_due_date = instance.due_date
+        if old_due_date != new_due_date:
+            # Create logs for all deficiencies associated with this home inspection
+            create_due_date_change_logs(instance, actor, old_due_date, new_due_date)
+
+        return instance
 
 
 class HomeInspectionSerializer(serializers.ModelSerializer):

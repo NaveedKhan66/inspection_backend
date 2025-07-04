@@ -32,6 +32,7 @@ from django.http import Http404
 from django.db import transaction
 from rest_framework.serializers import ModelSerializer
 from inspections.filters import HomeInspectionFilter
+from inspections.utils import bulk_create_deficiency_update_logs
 
 
 class InspectionViewSet(viewsets.ModelViewSet):
@@ -172,6 +173,19 @@ class DefImageDeleteView(generics.DestroyAPIView):
             .get_queryset()
             .filter(deficiency__home_inspection__inspection__builder=user)
         )
+
+    def destroy(self, request, *args, **kwargs):
+        """Override destroy to create logs when deficiency images are deleted"""
+        instance = self.get_object()
+        deficiency = instance.deficiency
+        actor = request.user
+
+        # Create log entry for the image deletion
+        changes = [f"Image Deleted: {instance.image}"]
+        bulk_create_deficiency_update_logs(changes, deficiency, actor)
+
+        # Proceed with the deletion
+        return super().destroy(request, *args, **kwargs)
 
 
 class BuilderTradeDeficiencyListView(generics.ListAPIView):

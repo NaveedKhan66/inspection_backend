@@ -119,6 +119,30 @@ def bulk_create_deficiency_update_logs(changes, instance, actor):
     DeficiencyUpdateLog.objects.bulk_create(logs_to_create)
 
 
+def create_due_date_change_logs(home_inspection, actor, old_due_date, new_due_date):
+    """Create logs for all deficiencies when home inspection due date changes"""
+
+    deficiencies = home_inspection.deficiencies.all()
+
+    # Format the due date change message
+    old_date_str = old_due_date.strftime("%Y-%m-%d") if old_due_date else "None"
+    new_date_str = new_due_date.strftime("%Y-%m-%d") if new_due_date else "None"
+    change_description = f"Due Date Changed: {old_date_str} to {new_date_str}"
+
+    # Create logs for all deficiencies associated with this home inspection
+    logs_to_create = [
+        DeficiencyUpdateLog(
+            deficiency=deficiency,
+            actor_name=actor.get_full_name() if actor else "System",
+            description=change_description,
+        )
+        for deficiency in deficiencies
+    ]
+
+    if logs_to_create:
+        DeficiencyUpdateLog.objects.bulk_create(logs_to_create)
+
+
 def bulk_create_deficiency_notifications(
     changes, instance, actor, notification_users, builder_user
 ):
