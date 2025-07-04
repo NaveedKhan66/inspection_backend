@@ -4,7 +4,7 @@ from rest_framework import permissions
 class IsBuilder(permissions.IsAuthenticated):
 
     def has_permission(self, request, view):
-        return request.user.user_type == "builder"
+        return request.user.user_type == "builder" or request.user.user_type == "admin"
 
 
 class IsEmployee(permissions.IsAuthenticated):

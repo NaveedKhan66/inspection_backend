@@ -181,7 +181,7 @@ class DefImageDeleteView(generics.DestroyAPIView):
         actor = request.user
 
         # Create log entry for the image deletion
-        changes = [f"Image Deleted: {instance.image}"]
+        changes = [f"Image Deleted"]
         bulk_create_deficiency_update_logs(changes, deficiency, actor)
 
         # Proceed with the deletion
