@@ -1,7 +1,18 @@
 import django_filters
 from inspections.models import Deficiency, HomeInspection
-from django.db.models import Count, Q, IntegerField, Value, CharField, Case, When
-from django.db.models.functions import Cast, Concat, StrIndex, Left
+from django.db.models import (
+    Count,
+    Q,
+    IntegerField,
+    Value,
+    CharField,
+    Case,
+    When,
+    F,
+    ExpressionWrapper,
+)
+from django.db.models.functions import Cast, Concat, StrIndex, Left, ExtractDay, Now
+from datetime import date
 
 
 class DeficiencyFilter(django_filters.FilterSet):
@@ -26,6 +37,26 @@ class DeficiencyFilter(django_filters.FilterSet):
         field_name="home_inspection__inspection__builder__id"
     )
     street_no = django_filters.CharFilter(field_name="home_inspection__home__street_no")
+    sort_by = django_filters.ChoiceFilter(
+        choices=[
+            ("id", "ID"),
+            ("address", "Address"),
+            ("location", "Location"),
+            ("status", "Status"),
+            ("trade", "Trade Name"),
+            ("created_date", "Created Date"),
+            ("due_date", "Due Date"),
+            ("outstanding_days", "Outstanding Days"),
+        ],
+        method="filter_sort",
+    )
+    sort_order = django_filters.ChoiceFilter(
+        choices=[
+            ("asc", "Ascending"),
+            ("desc", "Descending"),
+        ],
+        method="filter_sort",
+    )
 
     class Meta:
         model = Deficiency
@@ -43,6 +74,8 @@ class DeficiencyFilter(django_filters.FilterSet):
             "project_id",
             "builder_id",
             "street_no",
+            "sort_by",
+            "sort_order",
         ]
 
     def filter_search(self, queryset, name, value):
@@ -54,6 +87,93 @@ class DeficiencyFilter(django_filters.FilterSet):
 
         # Convert the ID field to string for partial matching
         return queryset.filter(id__icontains=value)
+
+    def filter_sort(self, queryset, name, value):
+        sort_by = self.data.get("sort_by", "id")
+        sort_order = self.data.get("sort_order", "desc")
+
+        if sort_by == "id":
+            queryset = queryset.order_by(f"{'-' if sort_order == 'desc' else ''}id")
+
+        elif sort_by == "address":
+            # Concatenate address components similar to get_home_address in serializer
+            queryset = queryset.annotate(
+                full_address=Concat(
+                    F("home_inspection__home__street_no"),
+                    Value(" "),
+                    F("home_inspection__home__address"),
+                    Value(" "),
+                    F("home_inspection__home__city"),
+                    output_field=CharField(),
+                )
+            ).order_by(f"{'-' if sort_order == 'desc' else ''}full_address")
+
+        elif sort_by == "location":
+            queryset = queryset.order_by(
+                f"{'-' if sort_order == 'desc' else ''}location"
+            )
+
+        elif sort_by == "status":
+            # Custom ordering for status
+            status_order = {
+                "asc": Case(
+                    When(status="complete", then=Value(0)),
+                    When(status="pending_approval", then=Value(1)),
+                    When(status="incomplete", then=Value(2)),
+                    default=Value(3),
+                    output_field=IntegerField(),
+                ),
+                "desc": Case(
+                    When(status="incomplete", then=Value(0)),
+                    When(status="pending_approval", then=Value(1)),
+                    When(status="complete", then=Value(2)),
+                    default=Value(3),
+                    output_field=IntegerField(),
+                ),
+            }
+            queryset = queryset.annotate(
+                status_order=status_order[sort_order]
+            ).order_by("status_order")
+
+        elif sort_by == "trade":
+            queryset = queryset.annotate(
+                trade_name=Concat(
+                    F("trade__first_name"),
+                    Value(" "),
+                    F("trade__last_name"),
+                    output_field=CharField(),
+                )
+            ).order_by(f"{'-' if sort_order == 'desc' else ''}trade_name")
+
+        elif sort_by == "created_date":
+            queryset = queryset.order_by(
+                f"{'-' if sort_order == 'desc' else ''}created_at"
+            )
+
+        elif sort_by == "due_date":
+            queryset = queryset.order_by(
+                f"{'-' if sort_order == 'desc' else ''}home_inspection__due_date"
+            )
+
+        elif sort_by == "outstanding_days":
+            # Calculate outstanding days similar to get_outstanding_days in serializer
+            queryset = queryset.annotate(
+                days_outstanding=Case(
+                    When(
+                        completion_date__isnull=False,
+                        then=ExtractDay(
+                            F("completion_date")
+                            - Cast(F("created_at"), output_field=CharField())
+                        ),
+                    ),
+                    default=ExtractDay(
+                        Now() - Cast(F("created_at"), output_field=CharField())
+                    ),
+                    output_field=IntegerField(),
+                )
+            ).order_by(f"{'-' if sort_order == 'desc' else ''}days_outstanding")
+
+        return queryset
 
 
 class HomeInspectionFilter(django_filters.FilterSet):

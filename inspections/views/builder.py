@@ -70,8 +70,7 @@ class DeficiencyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsBuilder | IsTrade | IsEmployee]
     filter_backends = [DjangoFilterBackend]
     filterset_class = DeficiencyFilter
-    ordering_fields = ["updated_at"]
-    ordering = ["-updated_at"]
+    ordering = None
 
     # TODO: add permission for admin to list deficiencies.
     def filter_queryset(self, queryset):
