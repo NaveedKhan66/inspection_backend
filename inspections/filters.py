@@ -1,7 +1,7 @@
 import django_filters
 from inspections.models import Deficiency, HomeInspection
-from django.db.models import Count, Q, IntegerField, Value, CharField
-from django.db.models.functions import Cast, Concat
+from django.db.models import Count, Q, IntegerField, Value, CharField, Case, When
+from django.db.models.functions import Cast, Concat, StrIndex, Left
 
 
 class DeficiencyFilter(django_filters.FilterSet):
@@ -108,9 +108,20 @@ class HomeInspectionFilter(django_filters.FilterSet):
                     )
                 ).order_by(f"{'-' if sort_order == 'desc' else ''}pending_items_count")
         elif sort_by == "lot_no":
-            # Sort by lot_no numerically
+            # Sort by lot_no numerically, handling formats like "01-001", "02-003", "15", "32-19"
+            # Extract the number before the dash (or the whole number if no dash)
             queryset = queryset.annotate(
-                lot_no_int=Cast("home__lot_no", output_field=IntegerField())
+                lot_no_prefix=Case(
+                    When(
+                        home__lot_no__contains="-",
+                        then=Left(
+                            "home__lot_no", StrIndex("home__lot_no", Value("-")) - 1
+                        ),
+                    ),
+                    default="home__lot_no",
+                    output_field=CharField(),
+                ),
+                lot_no_int=Cast("lot_no_prefix", output_field=IntegerField()),
             ).order_by(f"{'-' if sort_order == 'desc' else ''}lot_no_int")
         elif sort_by == "address":
             # Sort by concatenated street_no and address

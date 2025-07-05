@@ -11,6 +11,10 @@ from rest_framework import status
 from django.core.mail import send_mail
 from inspection_backend.settings import EMAIL_HOST_USER
 from inspection_backend.settings import RESET_PASSOWRD_LINK
+from users.models import User
+from users.filters import TradeFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
 
 User = get_user_model()
 
@@ -21,6 +25,8 @@ class BuilderTradeListView(
     serializer_class = builder.BuilderTradeListSerializer
     permission_classes = [permissions.IsAuthenticated, IsBuilder | IsEmployee]
     queryset = User.objects.filter(user_type="trade")
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = TradeFilter
 
     def get_queryset(self):
         builder = None
@@ -30,14 +36,7 @@ class BuilderTradeListView(
         elif self.request.user.user_type == "employee":
             builder = self.request.user.employee.builder
 
-        queryset = super().get_queryset().filter(trade__builder=builder)
-
-        # Add search by first_name if search parameter is provided
-        search_query = self.request.query_params.get("search", None)
-        if search_query:
-            queryset = queryset.filter(first_name__icontains=search_query)
-
-        return queryset
+        return super().get_queryset().filter(trade__builder=builder)
 
 
 class OwnerInviteView(APIView):
