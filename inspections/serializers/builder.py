@@ -298,8 +298,8 @@ class DeficiencySerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation["trade"] = {
-            "id": instance.trade.id,
-            "name": instance.trade.get_full_name(),
+            "id": instance.trade.id if instance.trade else None,
+            "name": instance.trade.get_full_name() if instance.trade else None,
         }
         return representation
 
@@ -326,8 +326,8 @@ class DeficiencyListSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation["trade"] = {
-            "id": instance.trade.id,
-            "name": instance.trade.get_full_name(),
+            "id": instance.trade.id if instance.trade else None,
+            "name": instance.trade.get_full_name() if instance.trade else None,
         }
         return representation
 
