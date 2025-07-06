@@ -524,7 +524,14 @@ class DeficienciesFilterOptionsView(APIView):
                 )
 
             # Keep project_values as None since we're now nesting projects under builders
-            project_values = None
+            projects = (
+                Project.objects.filter(
+                    homes__homeinspection__deficiencies__trade=self.request.user
+                )
+                .distinct()
+                .values("id", "name")
+            )
+            project_values = list(projects)
 
             deficiencies = Deficiency.objects.select_related(
                 "home_inspection__home", "trade"
@@ -558,11 +565,8 @@ class DeficienciesFilterOptionsView(APIView):
             "postal_codes": postal_codes,
             "builders": builders,
             "inspections": list(inspections),
+            "projects": project_values,
         }
-
-        # Only include projects separately if project_values is not None (for builder/employee users)
-        if project_values is not None:
-            response_data["projects"] = project_values
 
         return Response(response_data)
 
