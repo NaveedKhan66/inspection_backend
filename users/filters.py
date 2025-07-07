@@ -7,7 +7,7 @@ class TradeFilter(filters.FilterSet):
     search = filters.CharFilter(method="search_filter", label="Search")
     sort_by = filters.ChoiceFilter(
         choices=[
-            ("name", "Name"),
+            ("first_name", "First Name"),
             ("incomplete_items", "Incomplete Items"),
         ],
         method="filter_sort",
@@ -30,10 +30,10 @@ class TradeFilter(filters.FilterSet):
         )
 
     def filter_sort(self, queryset, name, value):
-        sort_by = self.data.get("sort_by", "name")
+        sort_by = self.data.get("sort_by", "first_name")
         sort_order = self.data.get("sort_order", "desc")
 
-        if sort_by == "name":
+        if sort_by == "first_name":
             # Sort by concatenated first_name and last_name
             queryset = queryset.order_by(
                 f"{'-' if sort_order == 'desc' else ''}first_name",

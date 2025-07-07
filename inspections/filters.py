@@ -40,11 +40,11 @@ class DeficiencyFilter(django_filters.FilterSet):
     sort_by = django_filters.ChoiceFilter(
         choices=[
             ("id", "ID"),
-            ("address", "Address"),
+            ("home_address", " Home Address"),
             ("location", "Location"),
             ("status", "Status"),
             ("trade", "Trade Name"),
-            ("created_date", "Created Date"),
+            ("created_at", "Created At"),
             ("due_date", "Due Date"),
             ("outstanding_days", "Outstanding Days"),
         ],
@@ -95,18 +95,11 @@ class DeficiencyFilter(django_filters.FilterSet):
         if sort_by == "id":
             queryset = queryset.order_by(f"{'-' if sort_order == 'desc' else ''}id")
 
-        elif sort_by == "address":
+        elif sort_by == "home_address":
             # Concatenate address components similar to get_home_address in serializer
-            queryset = queryset.annotate(
-                full_address=Concat(
-                    F("home_inspection__home__street_no"),
-                    Value(" "),
-                    F("home_inspection__home__address"),
-                    Value(" "),
-                    F("home_inspection__home__city"),
-                    output_field=CharField(),
-                )
-            ).order_by(f"{'-' if sort_order == 'desc' else ''}full_address")
+            queryset = queryset.order_by(
+                f"{'-' if sort_order == 'desc' else ''}home_inspection__home__address"
+            )
 
         elif sort_by == "location":
             queryset = queryset.order_by(
@@ -145,7 +138,7 @@ class DeficiencyFilter(django_filters.FilterSet):
                 )
             ).order_by(f"{'-' if sort_order == 'desc' else ''}trade_name")
 
-        elif sort_by == "created_date":
+        elif sort_by == "created_at":
             queryset = queryset.order_by(
                 f"{'-' if sort_order == 'desc' else ''}created_at"
             )
