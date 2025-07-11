@@ -12,6 +12,7 @@ import threading
 from datetime import date, datetime
 from inspections.models import HomeInspection
 import pytz
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -86,21 +87,28 @@ def send_inspection_report_email(request, home_inspection):
     return email.send()
 
 
-def get_notification_users(user):
+def get_notification_users(user, deficiency):
     """populate users to which the notification will be sent"""
 
     builder_user = None
     notification_users = None
+    trade = deficiency.trade
     if user.user_type == "builder":
-        notification_users = User.objects.filter(employee__builder__user=user)
+        notification_users = User.objects.filter(
+            Q(employee__builder__user=user) | Q(id=trade.id)
+        )
     elif user.user_type == "trade":
         # Get all builders associated with the trade
-        builders = user.trade.builder.all()
-        # Get all employees for all builders
-        notification_users = User.objects.filter(employee__builder__in=builders)
+        builder = deficiency.home_inspection.home.project.builder
+        # Get all employees for all builder
+        notification_users = User.objects.filter(
+            Q(employee__builder__user=builder) | Q(id=builder.id)
+        )
     elif user.user_type == "employee":
         builder_user = user.employee.builder.user
-        notification_users = User.objects.filter(employee__builder__user=builder_user)
+        notification_users = User.objects.filter(
+            Q(employee__builder__user=builder_user) | Q(id=trade.id)
+        )
 
     return notification_users
 
